@@ -102,13 +102,11 @@ This code is based on UCSC formats. Therefore all coordinates reported are expre
 
 =head1 CLASS METHODS
 
-=over 4
-
-=item Bio::DB::Big->init();
+=head2 Bio::DB::Big->init();
 
 Initalises libBigWig. Essential to call B<if> you are going to load remote files. Consider doing this once in a BEGIN block in your code.
 
-=item my $bf = Bio::DB::Big->open('/path/to/big.file');
+=head2 my $bf = Bio::DB::Big->open('/path/to/big.file');
 
 Perl method that wraps two methods from L<Bio::DB::Big::File>. File type is sniffed using C<test_big_wig()>. If true we open the file using C<open_big_wig()>. If not we open using C<open_big_bed()>. The caller can then use C<is_big_wig()> or C<is_big_bed()> to assert the type of file now available.
 
