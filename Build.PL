@@ -71,14 +71,14 @@ sub find_libbigwig {
     if ( my $dir = $self->args('libbigwig') ) {
         return 1 if $self->find_libbigwig_in_build_dir($dir);
         return 1 if $self->find_libbigwig_in_install_dir($dir);
-        $self->die_bigwig_not_found(
+        $self->die_libbigwig_not_found(
 "--libbigwig '$dir' command line parameter does not contain expected files\n"
         );
     }
     elsif ( $dir = $ENV{'LIBBIGWIG_DIR'} ) {
         return 1 if $self->find_libbigwig_in_build_dir($dir);
         return 1 if $self->find_libbigwig_in_install_dir($dir);
-        $self->die_hts_not_found(
+        $self->die_libbigwig_not_found(
 "LIGBIGWIG_DIR=$ENV{LIBBIGWIG_DIR} environment variable does not contain expected files\n"
         );
     }
