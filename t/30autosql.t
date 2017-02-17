@@ -67,7 +67,7 @@ my $expected_structure = bless({
     bless(
     { type => 'string', name => 'city', comment => 'City - indexing just first 12 character', position => 4,
       field_size => undef, field_values => [], declare_size => undef, index_type => 'index',
-      index_size => 12, auto => undef, declare_name => undef,
+      index_size => "12", auto => undef, declare_name => undef,
     }, $as_obj),
     bless(
     { type => 'uint', name => 'zipCode', comment => 'A zip code is always positive, so can be unsigned', position => 5,
@@ -76,7 +76,7 @@ my $expected_structure = bless({
     }, $as_obj),
     bless(
     { type => 'char', name => 'state', comment => 'Just store the abbreviation for the state', position => 6,
-      field_size => 2, field_values => [], declare_size => undef, index_type => 'index',
+      field_size => "2", field_values => [], declare_size => undef, index_type => 'index',
       index_size => undef, auto => undef, declare_name => undef,
     }, $as_obj),
     bless(

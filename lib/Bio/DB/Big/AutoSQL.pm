@@ -242,6 +242,8 @@ sub _parse_fields {
     if($field_values) {
       @field_values_parsed = split /,\s*/, $field_values;
     }
+    $field_size = "$field_size" if $field_size;
+    $index_size = "$index_size" if $index_size;
     my $field = Bio::DB::Big::AutoSQLField->new({
       type => $type,
       name => $name,
