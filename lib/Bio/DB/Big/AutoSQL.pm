@@ -199,6 +199,20 @@ sub has_field {
   return exists $self->_field_lookup()->{$field_name} ? 1 : 0;
 }
 
+=pod
+
+=head2 is_table() 
+
+Returns a boolean if this AutoSQL object represents a table i.e. the type is set to table
+
+=cut
+
+sub is_table {
+  my ($self) = @_;
+  my $type = $self->type();
+  return ($type eq 'table') ? 1 : 0;
+}
+
 sub _field_lookup {
   my ($self) = @_;
   if(! $self->{_field_lookup}) {

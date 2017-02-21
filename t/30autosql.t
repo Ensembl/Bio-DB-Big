@@ -112,4 +112,6 @@ eq_or_diff($as, $expected_structure, 'Checking fields parse as expected');
 
 throws_ok { Bio::DB::Big::AutoSQL->new('bogus') } qr/Parse error/, 'Checking bogus AutoSQL is picked up on';
 
+ok($as->is_table(), 'Checking we say this is a table');
+
 done_testing();
