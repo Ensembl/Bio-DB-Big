@@ -118,7 +118,7 @@ We assume that libcurl is installed to a central location and is a requirement f
 
 =item Installing from L<Alien::LibBigWig>
 
-=item Using L<pkg-config> to find the location
+=item Using C<pkg-config> to find the location
 
 =item Installing libBigWig to a central location. We attempt C</usr, /usr/local, /usr/share, /opt/local>
 

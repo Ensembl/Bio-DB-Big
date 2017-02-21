@@ -107,7 +107,7 @@ We assume that libcurl is installed to a central location and is a requirement f
 - Setting an environment variable `LIBBIGWIG_DIR` to the correct path
 - Setting the `--prefix` argument
 - Installing from [Alien::LibBigWig](https://metacpan.org/pod/Alien::LibBigWig)
-- Using [pkg-config](https://metacpan.org/pod/pkg-config) to find the location
+- Using `pkg-config` to find the location
 - Installing libBigWig to a central location. We attempt `/usr, /usr/local, /usr/share, /opt/local`
 
 `Build.PL` looks to see if we can find `BigWig.h` and `libBigWig.a` in one of the above locations resolved in the above order. If we cannot find the library then compilation will fail.
