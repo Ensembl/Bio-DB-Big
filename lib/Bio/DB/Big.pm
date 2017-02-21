@@ -46,6 +46,8 @@ sub open {
 
 package Bio::DB::Big::File;
 
+use Bio::DB::Big::AutoSQL;
+
 sub get_autosql {
   my ($self) = @_;
   my $as = $self->get_autosql_string();
