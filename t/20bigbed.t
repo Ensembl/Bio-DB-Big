@@ -85,7 +85,8 @@ throws_ok { $bb->get_entries_iterator('chr21', 1, $chr21_len+100); } qr/Invalid 
 throws_ok { $bb->get_entries_iterator('chr21', 1000, 10); } qr/Invalid bounds/, 'Caught exception get_entries_iterator when start exceeds end';
 
 #### Now AutoSQL
-my $autosql = $bb->get_autosql;
-ok(! defined $autosql, 'Checking this BigBed file lacks autosql');
+my $as = $bb->get_autosql_string;
+ok(! defined $as, 'Checking this BigBed file lacks autosql');
+ok(! defined $bb->get_autosql(), 'Checking that this returns an undefined AutoSQL refernce as well');
 
 done_testing();

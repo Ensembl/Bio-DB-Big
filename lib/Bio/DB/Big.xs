@@ -595,7 +595,7 @@ bf_get_entries_iterator(big, chrom, startp=1, endp=0, withstring=0, blocksperite
 #  AUTOSQL WORK
 
 SV*
-bf_get_autosql(big)
+bf_get_autosql_string(big)
   Bio::DB::Big::File big
   PROTOTYPE: $
   PREINIT:

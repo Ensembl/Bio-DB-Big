@@ -161,9 +161,13 @@ Iterator version of C<get_entries()> allowing you to walk through an entire BigB
     }
   }
 
-=head2 my $autosql = $bf->get_autosql();
+=head2 my $autosql = $bf->get_autosql_string();
 
 Returns the AutoSQL held alongside a BigBed file. Will return undef if no AutoSQL was used in the file.
+
+=head2 my $autosql_obj = $bf->get_autosql();
+
+Returns a L<Bio::DB::Big::AutoSQL> object representing the retrieved AutoSQL string. Will return undef if there is no AutoSQL assoicated with the big file. Can throw an exception if the AutoSQL string does not correctly parse.
 
 =head1 AVAILABLE SUMMARY TYPES
 
@@ -187,7 +191,9 @@ The following strings can be used when calculating statistics over a BigWig file
 
 =back
 
-=pod
+=cut
+
+=pod 
 
 =head1 LICENSE
 

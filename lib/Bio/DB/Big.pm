@@ -44,4 +44,13 @@ sub open {
   return Bio::DB::Big::File->open_big_bed($filename);
 }
 
+package Bio::DB::Big::File;
+
+sub get_autosql {
+  my ($self) = @_;
+  my $as = $self->get_autosql_string();
+  return if ! $as;
+  return Bio::DB::Big::AutoSQL->new($as);
+}
+
 1;
