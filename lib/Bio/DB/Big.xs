@@ -351,6 +351,109 @@ bf_get_stats(big, chrom, startp=1, endp=0, binsp=1, type="mean", full=0)
     RETVAL
 
 SV*
+bf_get_all_stats(big, chrom, startp=1, endp=0, binsp=1, full=0)
+  Bio::DB::Big::File big
+  char * chrom
+  int startp
+  int endp
+  int binsp
+  int full
+  PREINIT:
+    uint32_t tid;
+    uint32_t chromlen;
+    uint32_t start;
+    uint32_t end;
+    uint32_t bins;
+    double * mean_values;
+    double * min_values;
+    double * max_values;
+    double * coverage_values;
+    double * stddev_values;
+    AV * avref;
+    int i;
+  PROTOTYPE: $$$$$$
+  CODE:
+    if(big->type == 1) {
+      croak("Invalid operation; bigBed files do not have statistics");
+    }
+    
+    check_chrom(big, chrom);
+    tid = bwGetTid(big, chrom);
+    chromlen = big->cl->len[tid];
+    
+    start = (uint32_t)startp;
+    end = (uint32_t)endp;
+    bins = (uint32_t)binsp;
+    
+    if(end == 0) {
+      end = chromlen;
+    }
+    
+    check_bounds(big, chrom, tid, start, end);
+    
+    avref = (AV*) sv_2mortal((SV*)newAV());
+    if(full) {
+      mean_values = bwStatsFromFull(big, chrom, start, end, bins, char2bwstatsenum("mean"));
+      min_values = bwStatsFromFull(big, chrom, start, end, bins, char2bwstatsenum("min"));
+      max_values = bwStatsFromFull(big, chrom, start, end, bins, char2bwstatsenum("max"));
+      coverage_values = bwStatsFromFull(big, chrom, start, end, bins, char2bwstatsenum("cov"));
+      stddev_values = bwStatsFromFull(big, chrom, start, end, bins, char2bwstatsenum("std"));
+    }
+    else {
+      mean_values = bwStats(big, chrom, start, end, bins, char2bwstatsenum("mean"));
+      min_values = bwStats(big, chrom, start, end, bins, char2bwstatsenum("min"));
+      max_values = bwStats(big, chrom, start, end, bins, char2bwstatsenum("max"));
+      coverage_values = bwStats(big, chrom, start, end, bins, char2bwstatsenum("cov"));
+      stddev_values = bwStats(big, chrom, start, end, bins, char2bwstatsenum("std"));
+    }
+    
+    if(mean_values || min_values || max_values || coverage_values || stddev_values) {
+      for(i=0; i<bins; i++) {
+        HV * element;
+        element = (HV *)sv_2mortal((SV *)newHV());
+        
+        if(mean_values && ! isnan(mean_values[i])) {
+          hv_store(element, "mean", 4, newSVnv(mean_values[i]), 0);
+        }
+        if(min_values && ! isnan(min_values[i])) {
+          hv_store(element, "min", 3, newSVnv(min_values[i]), 0);
+        }
+        if(max_values && ! isnan(max_values[i])) {
+          hv_store(element, "max", 3, newSVnv(max_values[i]), 0);
+        }
+        if(! isnan(coverage_values[i])) {
+          hv_store(element, "cov", 3, newSVnv(coverage_values[i]), 0);
+        }
+        if(! isnan(stddev_values[i])) {
+          hv_store(element, "dev", 3, newSVnv(stddev_values[i]), 0);
+        }
+        
+        SV* element_ref;
+        element_ref = newRV((SV *)element);
+        av_push(avref, element_ref);
+      }
+    }
+    else {
+      croak("Fetch error; encountered error whilst fetching statistics for '%s' between %d and %d over %d bins", chrom, start, end, bins);
+    }
+    
+    if(mean_values)
+      free(mean_values);
+    if(min_values)
+      free(min_values);
+    if(max_values)
+      free(max_values);
+    if(coverage_values)
+      free(coverage_values);
+    if(stddev_values)
+      free(stddev_values);
+
+    RETVAL = (SV*) newRV((SV*)avref);
+    
+  OUTPUT:
+    RETVAL
+
+SV*
 bf_get_values(big, chrom, startp=1, endp=0)
   Bio::DB::Big::File big
   char * chrom

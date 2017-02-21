@@ -139,6 +139,35 @@ throws_ok { $bw->get_intervals_iterator('bogus', 1, 1000); } qr/Invalid chromoso
 throws_ok { $bw->get_intervals_iterator('1', 1, $chr1_len+100); } qr/Invalid bounds/, 'Caught exception get_intervals_iterator specifying something too long';
 throws_ok { $bw->get_intervals_iterator('1', 1000, 10); } qr/Invalid bounds/, 'Caught exception get_intervals_iterator when start exceeds end';
 
+####### Test the all stats methods
+
+{
+  my @stats_params = ('1', 1, 1000, 2);
+  my $stats = $bw->get_all_stats(@stats_params);
+  my $s = $stats->[0];
+  is_num($s->{mean}, 1.35, 0.01, 'Checking mean as expected from all stats');
+  is_num($s->{min}, 0.20, 0.01, 'Checking min as expected from all stats');
+  is_num($s->{max}, 1.5, 0.1, 'Checking max as expected from all stats');
+  is_num($s->{cov}, 0.106, 0.01, 'Checking cov as expected from all stats');
+  is_num($s->{dev}, 0.22, 0.01, 'Checking dev as expected from all stats');
+  is_deeply($stats->[1], {}, 'Checking second element is an empty set of statistics');
+}
+
+{
+  my @stats_params = ('1', 1, $chr1_len, 3, 1);
+  my $stats = $bw->get_all_stats(@stats_params);
+  diag explain $stats;
+  my $s = $stats->[0];
+  is_num($s->{mean}, 1.35, 0.01, 'Checking mean as expected from all stats full');
+  is_num($s->{min}, 0.20, 0.01, 'Checking min as expected from all stats full');
+  is_num($s->{max}, 1.5, 0.1, 'Checking max as expected from all stats full');
+  is_num($s->{cov}, 8e-7, 1e-7, 'Checking cov as expected from all stats full');
+  is_num($s->{dev}, 0.22, 0.01, 'Checking dev as expected from all stats full');
+  is_deeply($stats->[1], {}, 'Checking second element is an empty set of statistics full');
+  is_deeply($stats->[2], {}, 'Checking third element is an empty set of statistics full');
+}
+
+
 sub is_num {
   my ($got, $expected, $tolerance, $msg) = @_;
   my $diff = abs($got - $expected);
