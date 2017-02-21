@@ -86,7 +86,7 @@ Bio::DB::Big - Interface to BigWig and BigBed files via libBigWig
 
 # DESCRIPTION
 
-This library provides access to the BigWig and BigBed file formats designed by UCSC. However rather than use kent libraries this uses libBigWig from https://github.com/dpryan79/libBigWig as it provides an implementation that avoids exiting when errors happen. libBigWig provides access to BigWig summaries, values and intervals alongside providing access to BigBed entries.
+This library provides access to the BigWig and BigBed file formats designed by UCSC. However rather than use kent libraries this uses libBigWig from [https://github.com/dpryan79/libBigWig](https://github.com/dpryan79/libBigWig) as it provides an implementation that avoids exiting when errors happen. libBigWig provides access to BigWig summaries, values and intervals alongside providing access to BigBed entries.
 
 This implementation is read-only. Patches to give it write ability are welcomed however at the time of writing libBigWig only supports writing to BigWigs.
 
@@ -95,6 +95,22 @@ In addition there are a number of AutoSQL parsing objects implemented in Perl to
 Should you wish to use the kent library please consult [Bio::DB::BigFile](https://metacpan.org/pod/Bio::DB::BigFile), which is a very complete set of bindings into kent.
 
 # INSTALLATION
+
+Installation requires the following libraries to be made available
+
+- **libBigWig** - [https://github.com/dpryan79/libBigWig](https://github.com/dpryan79/libBigWig)
+- **libcurl**
+
+We assume that libcurl is installed to a central location and is a requirement for libBigWig (especially if you want to access remote files). libBigWig can be located via the following mechanisms:
+
+- By providing `--libbigwig=/path/to/libbigwig` to `Build.PL`
+- Setting an environment variable `LIBBIGWIG_DIR` to the correct path
+- Setting the `--prefix` argument
+- Installing from [Alien::LibBigWig](https://metacpan.org/pod/Alien::LibBigWig)
+- Using [pkg-config](https://metacpan.org/pod/pkg-config) to find the location
+- Installing libBigWig to a central location. We attempt `/usr, /usr/local, /usr/share, /opt/local`
+
+`Build.PL` looks to see if we can find `BigWig.h` and `libBigWig.a` in one of the above locations resolved in the above order. If we cannot find the library then compilation will fail.
 
 # COORDINATE SYSTEMS USED IN THIS LIBRARY
 
