@@ -2,14 +2,11 @@
 Build.PL
 Changes
 cpanfile
-lib/Bio/DB/Big.c
-lib/Bio/DB/Big.o
 lib/Bio/DB/Big.pm
 lib/Bio/DB/Big.pod
 lib/Bio/DB/Big.xs
 lib/Bio/DB/Big/AutoSQL.pm
 lib/Bio/DB/Big/AutoSQLField.pm
-lib/Bio/DB/Big/File.pm
 lib/Bio/DB/Big/File.pod
 LICENSE
 MANIFEST			This list of files
@@ -26,3 +23,5 @@ t/data/test.bb
 t/data/test.bed
 t/data/test.bw
 typemap
+META.yml
+META.json
