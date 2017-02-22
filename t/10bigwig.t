@@ -156,7 +156,6 @@ throws_ok { $bw->get_intervals_iterator('1', 1000, 10); } qr/Invalid bounds/, 'C
 {
   my @stats_params = ('1', 1, $chr1_len, 3, 1);
   my $stats = $bw->get_all_stats(@stats_params);
-  diag explain $stats;
   my $s = $stats->[0];
   is_num($s->{mean}, 1.35, 0.01, 'Checking mean as expected from all stats full');
   is_num($s->{min}, 0.20, 0.01, 'Checking min as expected from all stats full');
