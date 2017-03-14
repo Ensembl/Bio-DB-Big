@@ -92,7 +92,6 @@ b_init(packname, buffer=8388608)
   CODE:
     if(bwInit(buffer) != 0) {
       croak("Received an error in bwInit\n");
-      RETVAL = 1;
     }
     RETVAL = 1;
   OUTPUT:
