@@ -279,7 +279,7 @@ bf_has_chrom(big, chrom)
 # BIGWIG WORK
 
 # When full == 0 this is the same as Bio::DB::BigFile::bigWigSummaryArray. 
-# When full == 1 not sure what it's counterpart is. 
+# When full == 1 not sure what its counterpart is. 
 
 SV*
 bf_get_stats(big, chrom, startp=1, endp=0, binsp=1, type="mean", full=0)
