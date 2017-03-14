@@ -262,8 +262,13 @@ sub _parse_fields {
   my ($self, $raw_fields) = @_;
   my $position = 1;
   while($raw_fields =~ /$FIELD_RX/g) {
-    my ($type, $field_size, $field_values, $declare_type, $declare_name, $declare_size, $name, $index_type, $index_size, $auto, $comment) = 
-      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);
+
+    my (
+      $type, $field_size, $field_values, 
+      $declare_type, $declare_name, $declare_size, 
+      $name, 
+      $index_type, $index_size, $auto, 
+      $comment) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);
 
     # If no type is specified we default to the declared type
     if(! $type) {
