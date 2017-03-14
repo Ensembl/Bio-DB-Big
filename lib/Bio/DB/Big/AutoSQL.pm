@@ -46,6 +46,12 @@ use Carp;
 
 use Bio::DB::Big::AutoSQLField;
 
+#### START OF REGEXS
+
+#### A set of regular expressions used to parse AutoSQL files. See 
+#### https://github.com/ucscGenomeBrowser/kent/blob/master/src/hg/autoSql/autoSql.doc
+#### for more information on the specification.
+
 # Parse a name e.g. name
 my $NAME_RX = qr/[a-z0-9_]+/ixms;
 # Extract string from a quoted string e.g. "A description."
@@ -83,6 +89,8 @@ $INDEX_RX? $AUTO_RX?
 \s*
 $QUOTEDSTR_RX
 /xms;
+
+#### END OF REGEXS
 
 =pod
 
@@ -224,6 +232,7 @@ sub _field_lookup {
   return $self->{_field_lookup};
 }
 
+# Calls both internal parser rountines
 sub _parse {
   my ($self) = @_;
   my $raw_fields = $self->_parse_header();
@@ -232,6 +241,9 @@ sub _parse {
 }
 
 
+# Runs the declare regex against the raw autosql. Pulls back the 
+# header and all remaining unparsed fields i.e. anything between ().
+# Throws an exception if the AutoSQL isn't formatted as expected
 sub _parse_header {
   my ($self) = @_;
   if(my ($type, $name, $comment, $raw_fields) = $self->{raw} =~ $DECLARE_RX) {
@@ -243,21 +255,32 @@ sub _parse_header {
   confess 'Parse error; cannot parse AutoSQL provided';
 }
 
+# Loop through the fields (each one carridge returned) using the field regular expression.
+# We currently parse 11 fields out some of which may be empty. Any changes to the  
+# capture fields used in the regular expressions will have an impact on the order of capture
 sub _parse_fields {
   my ($self, $raw_fields) = @_;
   my $position = 1;
   while($raw_fields =~ /$FIELD_RX/g) {
     my ($type, $field_size, $field_values, $declare_type, $declare_name, $declare_size, $name, $index_type, $index_size, $auto, $comment) = 
       ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);
+
+    # If no type is specified we default to the declared type
     if(! $type) {
       $type = $declare_type;
     }
+    
+    # Any set or enum needs splitting if present
     my @field_values_parsed;
     if($field_values) {
       @field_values_parsed = split /,\s*/, $field_values;
     }
+    
+    # Field and string need to be stringified (because they can be text as well as numerics)
     $field_size = "$field_size" if $field_size;
     $index_size = "$index_size" if $index_size;
+    
+    # Create the field, push and increment position
     my $field = Bio::DB::Big::AutoSQLField->new({
       type => $type,
       name => $name,
@@ -276,9 +299,5 @@ sub _parse_fields {
   }
   return;
 }
-
-=pod
-
-=cut
 
 1;

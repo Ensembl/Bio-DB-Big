@@ -82,6 +82,8 @@ MODULE = Bio::DB::Big PACKAGE = Bio::DB::Big PREFIX=b_
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This needs to be set before anything can happen with remote files. The Python libs
+# set buffer to 1<<17 so I have done the same thing.
 int
 b_init(packname, buffer=8388608)
   char * packname
