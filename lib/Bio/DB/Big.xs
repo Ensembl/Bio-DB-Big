@@ -49,7 +49,7 @@ check_chrom(bigWigFile_t* big, char* chrom) {
   uint32_t tid;
   tid = bwGetTid(big, chrom);
   if(tid == -1) {
-    croak("Invalid chromosome; Cannot find chromosome name '%s' in the bigwig file", chrom);
+    croak("Invalid chromosome; Cannot find chromosome name '%s' in the big file", chrom);
   }
 }
 
