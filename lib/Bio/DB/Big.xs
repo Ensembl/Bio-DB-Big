@@ -83,9 +83,10 @@ MODULE = Bio::DB::Big PACKAGE = Bio::DB::Big PREFIX=b_
 # limitations under the License.
 
 # This needs to be set before anything can happen with remote files. The Python libs
-# set buffer to 1<<17 so I have done the same thing.
+# set buffer to 1<<17 (a balance between excessive connections being made and slupring
+# huge amounts of data into a buffer) so I have done the same thing.
 int
-b_init(packname, buffer=8388608)
+b_init(packname, buffer=131072)
   char * packname
   int buffer
   PROTOTYPE: $$
@@ -330,7 +331,7 @@ bf_get_stats(big, chrom, startp=1, endp=0, binsp=1, type="mean", full=0)
     else {
       values = bwStats(big, chrom, start, end, bins, char2bwstatsenum(type));
     }
-    
+
     if(values) {
       for(i=0; i<bins; i++) {
         if(isnan(values[i])) {
