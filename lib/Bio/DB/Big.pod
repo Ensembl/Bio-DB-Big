@@ -186,6 +186,10 @@ This library will raise exceptions as and when errors occur. You can trap them u
 
 Tried to use a bigwig method on a bigbed file or vice-versa
 
+=item B<Open error>
+
+An error occured whilst trying to open a file
+
 =item B<Invalid type>
 
 Unknown summary type given for statistics generation
