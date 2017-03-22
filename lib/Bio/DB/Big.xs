@@ -66,21 +66,55 @@ check_bounds(bigWigFile_t* big, char* chrom, uint32_t tid, uint32_t start, uint3
   }
 }
 
-long REDIRECT = 0;
-long VERIFY_PEER = 1;
-long TIMEOUT_MS = 0;
+#define MY_CXT_KEY "Bio::DB::Big::_guts" XS_VERSION
 
-CURLcode bigfileCallBack(CURL *curl) {
+typedef struct {
+    long follow_redirects;
+    long timeout;
+    long verify_ssl;
+    char * http_proxy;
+    char * https_proxy;
+    SV *routine;
+    CURL *curl;
+} my_cxt_t;
+
+START_MY_CXT
+
+CURLcode 
+bigfileCallBack(CURL *curl) {
+  dMY_CXT;
   CURLcode rv;
-
-  rv = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, REDIRECT);
-  if(rv != CURLE_OK) return rv;
-
-  rv = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_PEER);
-  if(rv != CURLE_OK) return rv;
   
-  rv = curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, TIMEOUT_MS);
+  if(MY_CXT.routine != (SV*)NULL) {
+    printf("Using routine\n");
+    MY_CXT.curl = curl;
+    rv = call_sv(MY_CXT.routine, G_DISCARD|G_NOARGS);
+  }
+  else {
+    printf("Using opts\n");
+    rv = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, MY_CXT.follow_redirects);
+    if(rv != CURLE_OK) return rv;
+  
+    rv = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, MY_CXT.verify_ssl);
+    if(rv != CURLE_OK) return rv;
+    
+    if(MY_CXT.http_proxy) {
+      rv = curl_easy_setopt(curl, CURLOPT_PROXY, MY_CXT.http_proxy);
+      if(rv != CURLE_OK) return rv;
+    }
 
+    if(MY_CXT.https_proxy) {
+      rv = curl_easy_setopt(curl, CURLOPT_PROXY, MY_CXT.https_proxy);
+      if(rv != CURLE_OK) return rv;
+    }
+
+    rv = curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, MY_CXT.timeout);
+  }
+  
+  long timeout;
+  curl_easy_getinfo(curl, CURLOPT_TIMEOUT_MS, &timeout);
+  printf("TIMEOUT: %ld\n", timeout);
+  
   return rv;
 }
 
@@ -103,6 +137,17 @@ MODULE = Bio::DB::Big PACKAGE = Bio::DB::Big PREFIX=b_
 # This needs to be set before anything can happen with remote files. The Python libs
 # set buffer to 1<<17 (a balance between excessive connections being made and slupring
 # huge amounts of data into a buffer) so I have done the same thing.
+
+BOOT:
+{
+  MY_CXT_INIT;
+  MY_CXT.follow_redirects = 0;
+  MY_CXT.timeout = 0;
+  MY_CXT.verify_ssl = 1;
+  MY_CXT.routine = (SV*)NULL;
+  MY_CXT.curl = (CURL*)NULL;
+}
+
 int
 b_init(packname, buffer=131072)
   char * packname
@@ -121,24 +166,109 @@ b_timeout(packname, timeout)
   char * packname
   long timeout
   PROTOTYPE: $$
+  PREINIT:
+    dMY_CXT;
   CODE:
-    TIMEOUT_MS = timeout;
+    MY_CXT.timeout = timeout;
 
 void
 b_follow_redirects(packname, follow_redirects)
   char * packname
   long follow_redirects
   PROTOTYPE: $$
+  PREINIT:
+    dMY_CXT;
   CODE:
-    REDIRECT = follow_redirects;
+    MY_CXT.follow_redirects = follow_redirects;
 
 void
 b_verify_ssl(packname, verify_ssl)
   char * packname
   long verify_ssl
   PROTOTYPE: $$
+  PREINIT:
+    dMY_CXT;
   CODE:
-    REDIRECT = verify_ssl;
+    MY_CXT.verify_ssl = verify_ssl;
+
+void
+b_http_proxy(packname, http_proxy)
+  char * packname
+  char * http_proxy
+  PROTOTYPE: $$
+  PREINIT:
+    dMY_CXT;
+  CODE:
+    MY_CXT.http_proxy = http_proxy;
+
+void
+b_https_proxy(packname, https_proxy)
+  char * packname
+  char * https_proxy
+  PROTOTYPE: $$
+  PREINIT:
+    dMY_CXT;
+  CODE:
+    MY_CXT.https_proxy = https_proxy;
+
+void 
+b_curl_routine(packname, routine)
+  char * packname
+  SV* routine
+  PROTOTYPE: $$
+  PREINIT:
+    dMY_CXT;
+  CODE:
+    if(MY_CXT.routine == (SV*)NULL) {
+      MY_CXT.routine = newSVsv(routine);
+    }
+    else {
+      SvSetSV(MY_CXT.routine, routine);
+    }
+
+void 
+b_curl_remove_routine(packname)
+  char * packname
+  PROTOTYPE: $
+  PREINIT:
+    dMY_CXT;
+  CODE:
+    //MY_CXT.routine = (SV*)NULL;
+    SvSetSV(MY_CXT.routine, (SV*)NULL);
+
+int
+b_set_curlopt_long(packname, opt, value)
+  char * packname
+  int opt
+  SV *value
+  PROTOTYPE: $$$
+  PREINIT:
+    dMY_CXT;
+  CODE:
+    long value_num = 0;
+    if ( SvOK( value ) )
+      value_num = (long)SvIV(value);
+    RETVAL = curl_easy_setopt(MY_CXT.curl, opt, value_num);
+  OUTPUT:
+    RETVAL
+
+int
+b_set_curlopt_string(packname, opt, val)
+  char * packname
+  int opt
+  char* val
+  PROTOTYPE: $$$
+  PREINIT:
+    dMY_CXT;
+  CODE:
+    RETVAL = curl_easy_setopt(MY_CXT.curl, opt, val);
+  OUTPUT:
+    RETVAL
+
+void
+CLONE(...)
+	CODE:
+	  MY_CXT_CLONE;
 
 MODULE = Bio::DB::Big PACKAGE = Bio::DB::Big::File PREFIX=bf_
 

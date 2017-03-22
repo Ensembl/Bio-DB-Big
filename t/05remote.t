@@ -24,6 +24,7 @@ use Test::Fake::HTTPD;
 use Test::Output;
 use Test::Exception;
 use Bio::DB::Big;
+use Bio::DB::Big::CurlOpts;
 
 use FindBin '$Bin';
 use bytes qw//;
@@ -155,13 +156,16 @@ subtest 'Checking that we can influence the CURL opts' => sub {
   {
     my $bw_file = "${url_root}/test.bw";
   
-    Bio::DB::Big->timeout(1);
-  
+    Bio::DB::Big->curl_routine(sub {
+      return Bio::DB::Big->set_curlopt_long(CURLOPT_TIMEOUT_MS, 1);
+    });
+
     my $err_regex = qr/Timeout was reached/;
     stderr_like(sub {
       Bio::DB::Big::File->test_big_wig($bw_file)
     }, $err_regex, 'Checking a low timeout causes connection issues');
-  
+    Bio::DB::Big->curl_remove_routine();
+
     Bio::DB::Big->timeout(0);
     stderr_unlike(sub {
       Bio::DB::Big::File->test_big_wig($bw_file)
