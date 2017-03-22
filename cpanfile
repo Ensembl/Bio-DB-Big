@@ -15,4 +15,5 @@ on 'test' => sub {
   requires 'Test::Differences';
   requires 'Test::Fake::HTTPD';
   requires 'Test::Exception';
+  requires 'Test::Output';
 };

@@ -66,6 +66,24 @@ check_bounds(bigWigFile_t* big, char* chrom, uint32_t tid, uint32_t start, uint3
   }
 }
 
+long REDIRECT = 0;
+long VERIFY_PEER = 1;
+long TIMEOUT_MS = 0;
+
+CURLcode bigfileCallBack(CURL *curl) {
+  CURLcode rv;
+
+  rv = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, REDIRECT);
+  if(rv != CURLE_OK) return rv;
+
+  rv = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_PEER);
+  if(rv != CURLE_OK) return rv;
+  
+  rv = curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, TIMEOUT_MS);
+
+  return rv;
+}
+
 MODULE = Bio::DB::Big PACKAGE = Bio::DB::Big PREFIX=b_
 
 # Copyright [2015-2017] EMBL-European Bioinformatics Institute
@@ -98,6 +116,30 @@ b_init(packname, buffer=131072)
   OUTPUT:
     RETVAL
 
+void
+b_timeout(packname, timeout)
+  char * packname
+  long timeout
+  PROTOTYPE: $$
+  CODE:
+    TIMEOUT_MS = timeout;
+
+void
+b_follow_redirects(packname, follow_redirects)
+  char * packname
+  long follow_redirects
+  PROTOTYPE: $$
+  CODE:
+    REDIRECT = follow_redirects;
+
+void
+b_verify_ssl(packname, verify_ssl)
+  char * packname
+  long verify_ssl
+  PROTOTYPE: $$
+  CODE:
+    REDIRECT = verify_ssl;
+
 MODULE = Bio::DB::Big PACKAGE = Bio::DB::Big::File PREFIX=bf_
 
 #  GENERIC FUNCTIONS
@@ -108,7 +150,7 @@ bf_test_big_bed(packname, filename)
   char * filename
   PROTOTYPE: $
   CODE:
-    RETVAL = bbIsBigBed(filename, NULL);
+    RETVAL = bbIsBigBed(filename, bigfileCallBack);
   OUTPUT:
     RETVAL
 
@@ -118,7 +160,7 @@ bf_test_big_wig(packname, filename)
   char * filename
   PROTOTYPE: $
   CODE:
-    RETVAL = bwIsBigWig(filename, NULL);
+    RETVAL = bwIsBigWig(filename, bigfileCallBack);
   OUTPUT:
     RETVAL
 
@@ -129,7 +171,9 @@ bf_open_big_wig(packname, filename, mode="r")
   char * mode
   PROTOTYPE: $$$
   CODE:
-    RETVAL = bwOpen(filename, NULL, mode);
+    RETVAL = bwOpen(filename, bigfileCallBack, mode);
+    if(! RETVAL)
+      croak("Open error; cannot open bigwig  %s", filename);
   OUTPUT:
     RETVAL
 
@@ -139,7 +183,9 @@ bf_open_big_bed(packname, filename)
   char * filename
   PROTOTYPE: $$
   CODE:
-    RETVAL = bbOpen(filename, NULL);
+    RETVAL = bbOpen(filename, bigfileCallBack);
+    if(! RETVAL)
+      croak("Open error; cannot open bigbed  %s", filename);
   OUTPUT:
     RETVAL
 

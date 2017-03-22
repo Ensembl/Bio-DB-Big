@@ -132,6 +132,10 @@ If you have compiled libBigWig against libcurl then you can access big files ove
 
 The underlying library listens to the environment variable C<http_proxy> to set proxies. If you need to go via a proxy please make sure you run something like C<export http_proxy=http://example.proxy:3128> or C<http_proxy=http://example.proxy:3128 perl script.pl> and set the proxy before the Perl command is run.
 
+=head2 INFLUENCING CURL OPTIONS
+
+libBigWig uses libcurl to do its communication. Alongside the above proxy influencing you can alter three variables from this library; the timeout, if you want to follow 301 and 302 headers and if you want to ignore problematic/incorrect/wrong secure certificates. More information is given in the class methods below.
+
 =head1 COORDINATE SYSTEMS USED IN THIS LIBRARY
 
 This code is based on UCSC formats. Therefore all coordinates reported are expressed in 0-based, half-open. This means that a genomic coordinate  displayed on UCSC or Ensembl e.g. C<chr1:1-100> is represented as C<chr1 0 100>. To convert from 0-based, half-open to 1-base, fully-closed add 1 to the start.
@@ -141,6 +145,24 @@ This code is based on UCSC formats. Therefore all coordinates reported are expre
 =head2 Bio::DB::Big->init();
 
 Initalises libBigWig. Essential to call B<if> you are going to load remote files. Consider doing this once in a BEGIN block in your code.
+
+=head2 Bio::DB::Big->timeout(0);
+
+Sets the libcurl timeout in milliseconds. Setting this to 0 means there is no timeout. See libcurl's CURLOPT_TIMEOUT_MS value for more information. 
+
+This is a global variable for the entire library.
+
+=head2 Bio::DB::Big->follow_redirects(1);
+
+By default libcurl will not follow 301 or 302 error codes. Switching this on will force it to follow them. See libcurl's CURLOPT_FOLLOWLOCATION value for more information. 
+
+This is a global variable for the entire library.
+
+=head2 Bio::DB::Big->verify_ssl(1);
+
+Forces libcurl to verify the remote SSL/TLS certificates. By default this is true. Setting it to false will allow any HTTPS communication to occur irrelevant of the attached certificate. See libcurl's CURLOPT_SSL_VERIFYPEER value for more information. 
+
+This is a global variable for the entire library.
 
 =head2 my $bf = Bio::DB::Big->open('/path/to/big.file');
 
