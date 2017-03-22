@@ -18,6 +18,8 @@ limitations under the License.
 
 package Bio::DB::Big::AutoSQL;
 
+#TODO consider bringing across functions to help decipher bigbed files when no AutoSQL has been used to create it or unofficial names have been used
+
 =pod
 
 =head1 NAME
