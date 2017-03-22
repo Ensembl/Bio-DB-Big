@@ -66,21 +66,29 @@ check_bounds(bigWigFile_t* big, char* chrom, uint32_t tid, uint32_t start, uint3
   }
 }
 
-long REDIRECT = 0;
-long VERIFY_PEER = 1;
-long TIMEOUT_MS = 0;
+#define MY_CXT_KEY "Bio::DB::Big::_guts" XS_VERSION
 
-CURLcode bigfileCallBack(CURL *curl) {
+typedef struct {
+    long follow_redirects;
+    long timeout;
+    long verify_ssl;
+} my_cxt_t;
+
+START_MY_CXT
+
+CURLcode 
+bigfileCallBack(CURL *curl) {
+  dMY_CXT;
   CURLcode rv;
 
-  rv = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, REDIRECT);
+  rv = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, MY_CXT.follow_redirects);
   if(rv != CURLE_OK) return rv;
 
-  rv = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_PEER);
+  rv = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, MY_CXT.verify_ssl);
   if(rv != CURLE_OK) return rv;
+
+  rv = curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, MY_CXT.timeout);
   
-  rv = curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, TIMEOUT_MS);
-
   return rv;
 }
 
@@ -103,6 +111,15 @@ MODULE = Bio::DB::Big PACKAGE = Bio::DB::Big PREFIX=b_
 # This needs to be set before anything can happen with remote files. The Python libs
 # set buffer to 1<<17 (a balance between excessive connections being made and slupring
 # huge amounts of data into a buffer) so I have done the same thing.
+
+BOOT:
+{
+  MY_CXT_INIT;
+  MY_CXT.follow_redirects = 0;
+  MY_CXT.timeout = 0;
+  MY_CXT.verify_ssl = 1;
+}
+
 int
 b_init(packname, buffer=131072)
   char * packname
@@ -121,24 +138,35 @@ b_timeout(packname, timeout)
   char * packname
   long timeout
   PROTOTYPE: $$
+  PREINIT:
+    dMY_CXT;
   CODE:
-    TIMEOUT_MS = timeout;
+    MY_CXT.timeout = timeout;
 
 void
 b_follow_redirects(packname, follow_redirects)
   char * packname
   long follow_redirects
   PROTOTYPE: $$
+  PREINIT:
+    dMY_CXT;
   CODE:
-    REDIRECT = follow_redirects;
+    MY_CXT.follow_redirects = follow_redirects;
 
 void
 b_verify_ssl(packname, verify_ssl)
   char * packname
   long verify_ssl
   PROTOTYPE: $$
+  PREINIT:
+    dMY_CXT;
   CODE:
-    REDIRECT = verify_ssl;
+    MY_CXT.verify_ssl = verify_ssl;
+
+void
+CLONE(...)
+	CODE:
+	  MY_CXT_CLONE;
 
 MODULE = Bio::DB::Big PACKAGE = Bio::DB::Big::File PREFIX=bf_
 
