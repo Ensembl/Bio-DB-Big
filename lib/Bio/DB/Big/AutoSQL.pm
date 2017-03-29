@@ -45,6 +45,7 @@ Provides access to an AutoSQL definition by parsing a raw AutoSQL file into this
 use strict;
 use warnings;
 use Carp;
+use Scalar::Util qw/reftype/;
 
 use Bio::DB::Big::AutoSQLField;
 
@@ -103,18 +104,45 @@ Create a new object. Must give it an AutoSQL definition otherwise the library wi
 =cut
 
 sub new {
-  my ($class, $autosql) = @_;
+  my ($class, $autosql, $alternative_name_lookup) = @_;
   confess("Parse error; no AutoSQL data given") if ! $autosql;
   chomp $autosql;
+  if(defined $alternative_name_lookup) {
+    if(reftype($alternative_name_lookup) ne 'HASH') {
+      confess 'Config error; expected a hash for alternative name lookup but was given a '.reftype($alternative_name_lookup);
+    }
+  }
+  else {
+    $alternative_name_lookup = {};
+  }
   my $self = bless({
     raw => $autosql,
     type => '',
     name => '',
     comment => '',
-    fields => []
+    fields => [],
+    alternative_name_lookup => {},
   }, (ref($class)||$class));
+  $self->alternative_name_lookup($alternative_name_lookup);
   $self->_parse();
   return $self;
+}
+
+=pod alternative_name_lookup()
+
+Give a hash where keys are alternative names and values are the target conversion name. The idea is you use the target conversion names at all times and the library will attempt to use this to translate between the two.
+
+=cut
+
+sub alternative_name_lookup {
+  my ($self, $alternative_name_lookup) = @_;
+  if(defined $alternative_name_lookup) {
+    if(reftype($alternative_name_lookup) ne 'HASH') {
+      confess 'Config error; expected a hash for alternative name lookup but was given a '.reftype($alternative_name_lookup);
+    }
+    $self->{alternative_name_lookup} = $alternative_name_lookup;
+  }
+  return $self->{alternative_name_lookup};
 }
 
 =pod
@@ -193,7 +221,16 @@ Returns a L<Bio::DB::Big::AutoSQLField> object for the given name. Returns undef
 sub get_field {
   my ($self, $field_name) = @_;
   return if ! $self->has_field($field_name);
-  return $self->_field_lookup()->{$field_name};
+  my $field_lookup = $self->_field_lookup();
+  if(exists $field_lookup->{$field_name}) {
+    return $field_lookup->{$field_name};
+  }
+  else {
+    my $alt_name_lookup = $self->alternative_name_lookup();
+    my $alt_name = $alt_name_lookup->{$field_name};
+    return $field_lookup->{$alt_name};
+  }
+  return;
 }
 
 =pod
@@ -206,7 +243,20 @@ Return a boolean response if the given field is found in the parsed AutoSQL defi
 
 sub has_field {
   my ($self, $field_name) = @_;
-  return exists $self->_field_lookup()->{$field_name} ? 1 : 0;
+  my $field_lookup = $self->_field_lookup();
+  if(exists $field_lookup->{$field_name}) {
+    return 1;
+  }
+  else {
+    my $alt_name_lookup = $self->alternative_name_lookup();
+    if(exists $alt_name_lookup->{$field_name}) {
+      my $alt_name = $alt_name_lookup->{$field_name};
+      if(exists $field_lookup->{$alt_name}) {
+        return 1;
+      }
+    }
+  }
+  return 0;
 }
 
 =pod

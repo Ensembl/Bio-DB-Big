@@ -210,6 +210,10 @@ Could not retrieve the requested region
 
 Could not parse a record. Normally happens with AutoSQL work.
 
+=item B<Config error>
+
+Incorrect value or configuration given to a module.
+
 =back
 
 =head1 SEE ALSO
