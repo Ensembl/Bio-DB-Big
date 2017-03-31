@@ -85,3 +85,18 @@ Determining what a BigBed file is meant to be is beyond the scope of this module
 
 ### Consequences
 Future modifications to make guesses about columns will not be accepted in.
+
+## 4. Support Perl module generation from AutoSQL
+Date: 2017-03-31
+
+### Status
+Approved
+
+### Context
+AutoSQL files provide a definition of a BED data set. It is possible to use this to generate modules to hold a row of BED data. Further work could be done to validate the BED input is what it claims to be e.g. integers, strings, chars.
+
+### Decision
+We have a single module for generating these Perl modules and a test case. The modules have basic accessors, do no data checking but can do basic validation of input data sizes. More advanced checking might also have knock on requirements to improve our AutoSQL field representation.
+
+### Consequences
+None
