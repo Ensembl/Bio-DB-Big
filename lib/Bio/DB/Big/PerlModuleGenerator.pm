@@ -38,26 +38,33 @@ for each field available, a C<new()> method and a C<new_from_bed()> method that 
 to construct an object from an array of bed elements. C<new_from_bed()> will error if an array is not
 given or the given array does not have the correct number of elements.
 
+The generated code also comes with two methods for creating new data structures. C<to_array>, which 
+creates an array ordered as a BED line would be. The second is C<to_hash>, which is a hash copy of the object.
+
 =head1 METHODS
 
 =cut
 
 use strict;
 use warnings;
+use POSIX qw/strftime/;
+
+my $WARNING_LINE = '########### CUSTOM CODE BELOW: Only insert custom code below this line #############';
 
 =pod
 
-=head new($namespace, $autosql)
+=head new($namespace, $autosql, $additional_code)
 
-Construct an object with a namespace and an autosql object
+Construct an object with a namespace and an autosql object. You can also give the module additional code to import in
 
 =cut
 
 sub new {
-  my ($class, $namespace, $autosql) = @_;
+  my ($class, $namespace, $autosql, $additional_code) = @_;
   my $self = bless({
     namespace => $namespace,
     autosql => $autosql,
+    additional_code => $additional_code
   }, (ref($class)||$class));
   return $self;
 }
@@ -88,6 +95,34 @@ sub autosql {
   my ($self, $autosql) = @_;
   $self->{autosql} = $autosql if defined $autosql;
   return $self->{autosql};
+}
+
+=pod
+
+=head2 additional_code()
+
+Accessor for the additional_code given to this object. This is custom additional code to be injected 
+into the class
+
+=cut
+
+sub additional_code {
+  my ($self, $additional_code) = @_;
+  $self->{additional_code} = $additional_code if defined $additional_code;
+  return $self->{additional_code};
+}
+
+=pod 
+
+=head2 warning_line
+
+Emit the warning line used to denote custom code in a generated module
+
+=cut
+
+sub warning_line {
+  my ($self) = @_;
+  return $WARNING_LINE;
 }
 
 =pod
@@ -134,9 +169,14 @@ sub _generate {
   foreach my $field (@{$fields}) {
     $accessors .= $self->_generate_accessor($field);
   }
+  my $emitters = $self->_generate_emitters();
+  my $additional_code = $self->additional_code() || q{};
+  my $warning_line = $self->warning_line();
+  
+  my $time = strftime('%FT%T%z', localtime);
   
   my $module = <<MODULE;
-#### THIS MODULE WAS GENERATED FROM AN AUTOSQL DEFINITION. DO NOT UPDATE MANUALLY
+#### THIS MODULE WAS GENERATED FROM AN AUTOSQL DEFINITION on $time
 
 package ${package}::${name};
 use strict;
@@ -146,6 +186,10 @@ use Scalar::Util qw/reftype/;
 
 $new
 $accessors
+$emitters
+
+$warning_line
+$additional_code
 1;
 MODULE
 }
@@ -187,6 +231,46 @@ TMPL
 }
 TMPL
   return $new_methods;
+}
+
+sub _generate_emitters {
+  my ($self) = @_;
+  my $emitters = q{};
+  my $fields = $self->autosql()->fields();
+  $emitters .= <<TMPL;
+=pod
+
+=head2 to_array
+
+Create an array of elements. These will be ordered as the fields appeared in the input BED
+
+=cut
+
+sub to_array {
+  my (\$self) = \@_;
+  return [
+TMPL
+  foreach my $field (@{$fields}) {
+    my $name = $field->name();
+    $emitters.= "    \$self->$name(),\n";
+  }
+  $emitters .= <<TMPL;
+  ];
+}
+
+=pod
+
+=head2 to_hash
+
+Returns a hash copy of the fields
+
+=cut
+
+sub to_hash {
+  my (\$self) = \@_;
+  return { %{ \$self }};
+}
+TMPL
 }
 
 # Takes in an autosql field and creates an accessor to be used
