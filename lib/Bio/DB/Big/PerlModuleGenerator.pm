@@ -48,6 +48,7 @@ creates an array ordered as a BED line would be. The second is C<to_hash>, which
 use strict;
 use warnings;
 use POSIX qw/strftime/;
+use Template::Tiny;
 
 my $WARNING_LINE = '########### CUSTOM CODE BELOW: Only insert custom code below this line #############';
 
@@ -135,7 +136,7 @@ Creates the module and returns it as a scalar
 
 sub generate {
   my ($self) = @_;
-  return $self->_generate();
+  return $self->_generate_tt();
 }
 
 =pod
@@ -155,89 +156,63 @@ sub generate_to_file {
   return 1;
 }
 
-# Generates the entire module
-
-sub _generate {
+# Grabs the params, formats, grabs the template, runs template tiny and returns the output
+sub _generate_tt {
   my ($self) = @_;
-  my $package = $self->namespace();
+  my $template = $self->_template();
   my $autosql = $self->autosql();
-  my $name = $autosql->name();
-  my $fields = $autosql->fields();
   
-  my $new = $self->_generate_new_methods();
-  my $accessors = q{};
-  foreach my $field (@{$fields}) {
-    $accessors .= $self->_generate_accessor($field);
-  }
-  my $emitters = $self->_generate_emitters();
-  my $additional_code = $self->additional_code() || q{};
-  my $warning_line = $self->warning_line();
+  my $fields = [
+    map { { name => $_->name(), index => ($_->position()-1) } } 
+    @{$autosql->fields()}
+  ];
   
-  my $time = strftime('%FT%T%z', localtime);
-  
-  my $module = <<MODULE;
-#### THIS MODULE WAS GENERATED FROM AN AUTOSQL DEFINITION on $time
+  my $params = {
+    name => $autosql->name(),
+    fields => $fields,
+    field_count => scalar(@{$fields}),
+    time => strftime('%FT%T%z', localtime),
+    namespace => $self->namespace(),
+    warning_line => $self->warning_line(),
+    additional_code => $self->additional_code(),
+  };
 
-package ${package}::${name};
+  my $output = q{};
+  my $tt = Template::Tiny->new(TRIM => 0);
+  $tt->process(\$template, $params, \$output);
+  return $output;
+}
+
+# Return the template. Originally did this by reading <DATA> and having it as a __DATA__ block. That didn't work on rereads
+sub _template {
+  my ($self) = @_;
+  return <<'TMPL';
+#### THIS MODULE WAS GENERATED FROM AN AUTOSQL DEFINITION on [% time %]
+
+package [% namespace %]::[% name %];
+
 use strict;
 use warnings;
 use Carp qw/confess/;
 use Scalar::Util qw/reftype/;
 
-$new
-$accessors
-$emitters
-
-$warning_line
-$additional_code
-1;
-MODULE
-}
-
-# Creates a new() method for the generated module and a new_from_bed()
-sub _generate_new_methods {
-  my ($self) = @_;
-  my $new_methods = q{};
-  $new_methods .= <<TMPL;
 sub new {
-  my (\$package) = \@_;
-  my \$class = ref(\$package) || \$package;
-  return bless({}, \$class);
+  my ($package) = @_;
+  my $class = ref($package) || $package;
+  return bless({}, $class);
 }
 
-TMPL
-
-  my $fields = $self->autosql()->fields();
-  my $field_count = scalar(@{$fields});
-  $new_methods .= <<TMPL;
 sub new_from_bed {
-  my (\$package, \$bed_line) = \@_;
-  confess "Bed error; Not given an array reference as a bedline" unless reftype(\$bed_line) eq 'ARRAY';
-  confess "Bed error; Bed line given does not have the right number of elements" unless scalar(\@{\$bed_line}) == $field_count;
-  my \$self = \$package->new();
-TMPL
-
-  foreach my $field (@{$fields}) {
-    my $name = $field->name();
-    my $position = $field->position();
-    $position--; #get into array coords
-    $new_methods .= <<TMPL;
-  \$self->$name(\$bed_line->[$position]);
-TMPL
-  }
-
-  $new_methods .= <<TMPL;
-  return \$self;
-}
-TMPL
-  return $new_methods;
+  my ($package, $bed_line) = @_;
+  confess "Bed error; Not given an array reference as a bedline" unless reftype($bed_line) eq 'ARRAY';
+  confess "Bed error; Bed line given does not have the right number of elements" unless scalar(@{$bed_line}) == [% field_count %];
+  my $self = $package->new();
+  [% FOREACH f IN fields -%]
+$self->[% f.name %]($bed_line->[[% f.index %]]);
+  [% END -%]
+return $self;
 }
 
-sub _generate_emitters {
-  my ($self) = @_;
-  my $emitters = q{};
-  my $fields = $self->autosql()->fields();
-  $emitters .= <<TMPL;
 =pod
 
 =head2 to_array
@@ -247,15 +222,12 @@ Create an array of elements. These will be ordered as the fields appeared in the
 =cut
 
 sub to_array {
-  my (\$self) = \@_;
+  my ($self) = @_;
   return [
-TMPL
-  foreach my $field (@{$fields}) {
-    my $name = $field->name();
-    $emitters.= "    \$self->$name(),\n";
-  }
-  $emitters .= <<TMPL;
-  ];
+  [% FOREACH f IN fields -%]
+  $self->[% f.name %](),
+  [% END -%]
+];
 }
 
 =pod
@@ -267,32 +239,35 @@ Returns a hash copy of the fields
 =cut
 
 sub to_hash {
-  my (\$self) = \@_;
-  return { %{ \$self }};
-}
-TMPL
+  my ($self) = @_;
+  return { %{ $self }};
 }
 
-# Takes in an autosql field and creates an accessor to be used
-sub _generate_accessor {
-  my ($self, $field) = @_;
-  my $name = $field->name();
-  my $routine = <<TMPL;
-=pod 
+[%- FOREACH f IN fields -%]
+=pod
 
-=head2 $name
+=head2 [% f.name %]
 
-Accessor for the attribute $name
+Accessor for the attribute [% f.name %]
 
 =cut
 
-sub $name {
-  my (\$self, \$${name}) = \@_;
-  \$self->{'${name}'} = \$${name} if defined \$${name};
-  return \$self->{'${name}'};
+sub [% f.name %] {
+  my ($self, $[% f.name %]) = @_;
+  $self->{'[% f.name %]'} = $[% f.name %] if defined $[% f.name %];
+  return $self->{'[% f.name %]'};
 }
+
+[%- END -%]
+
+[% warning_line %]
+
+[%- IF additional_code -%]
+[% additional_code %]
+[% END -%]
+
+1;
 TMPL
-  return $routine;
 }
 
 1;

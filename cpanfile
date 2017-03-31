@@ -1,4 +1,5 @@
 requires 'perl', '=>', '5.008';
+requires 'Template::Tiny';
 
 on 'configure' => sub {
   requires 'Module::Build::Pluggable';
