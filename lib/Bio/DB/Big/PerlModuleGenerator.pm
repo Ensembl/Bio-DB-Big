@@ -61,11 +61,12 @@ Construct an object with a namespace and an autosql object. You can also give th
 =cut
 
 sub new {
-  my ($class, $namespace, $autosql, $additional_code) = @_;
+  my ($class, $namespace, $autosql, $additional_code, $generate_fully_closed_accessors) = @_;
   my $self = bless({
     namespace => $namespace,
     autosql => $autosql,
-    additional_code => $additional_code
+    additional_code => $additional_code,
+    generate_fully_closed_accessors => $generate_fully_closed_accessors
   }, (ref($class)||$class));
   return $self;
 }
@@ -111,6 +112,22 @@ sub additional_code {
   my ($self, $additional_code) = @_;
   $self->{additional_code} = $additional_code if defined $additional_code;
   return $self->{additional_code};
+}
+
+=pod
+
+=head2 generate_fully_closed_accessors()
+
+If set to true we will generate two accessors called C<fc_chromStart> and C<fc_chromEnd>, which handle 
+converting between 0-start and 1-start coordinate systems. We assume all BED files have these
+fields filled in.
+
+=cut
+
+sub generate_fully_closed_accessors {
+  my ($self, $generate_fully_closed_accessors) = @_;
+  $self->{generate_fully_closed_accessors} = $generate_fully_closed_accessors if defined $generate_fully_closed_accessors;
+  return $self->{generate_fully_closed_accessors};
 }
 
 =pod 
@@ -175,6 +192,7 @@ sub _generate_tt {
     namespace => $self->namespace(),
     warning_line => $self->warning_line(),
     additional_code => $self->additional_code(),
+    generate_fully_closed_accessors => $self->generate_fully_closed_accessors(),
   };
 
   my $output = q{};
@@ -259,6 +277,53 @@ sub [% f.name %] {
 }
 
 [%- END -%]
+
+=pod
+
+=head2 size
+
+Returns the size of this BED feature. Just does a chromEnd - chromStart
+
+=cut
+
+sub size {
+  my ($self) = @_;
+  return $self->chromEnd() - $self->chromStart();
+}
+
+[%- IF generate_fully_closed_accessors -%]
+=pod
+
+=head2 fc_chromStart
+
+Accessor for coordinates of this BED feature in 1-start, fully-closed coordinates. This means adding +1 to the start. You can give this method a coordinate in 1-start and it will convert it back to 0-start.
+
+=cut
+
+sub fc_chromStart {
+  my ($self, $fc_chromStart) = @_;
+  if(defined $fc_chromStart) {
+    $self->chromStart($fc_chromStart-1);
+  }
+  return $self->chromStart()+1;
+}
+
+=pod
+
+=head2 fc_chromEnd
+
+Accessor for coordinates of this BED feature in 1-start, fully-closed coordinates. This means returning the end. You can set chromEnd via this method
+
+=cut
+
+sub fc_chromEnd {
+  my ($self, $fc_chromEnd) = @_;
+  if(defined $fc_chromEnd) {
+    $self->chromEnd($fc_chromEnd);
+  }
+  return $self->chromEnd();
+}
+[% END -%]
 
 [% warning_line %]
 

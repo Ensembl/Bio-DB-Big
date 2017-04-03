@@ -38,8 +38,9 @@ my $raw_autosql = qq{table bed6
     char[1] strand;    "+ or -"
     )};
 my $additional_code = 'sub tmp { return "MOD";}';
+my $generate_fc_accessors = 1;
 my $autosql = Bio::DB::Big::AutoSQL->new($raw_autosql);
-my $generator = Bio::DB::Big::PerlModuleGenerator->new('Tmp::Namespace', $autosql, $additional_code);
+my $generator = Bio::DB::Big::PerlModuleGenerator->new('Tmp::Namespace', $autosql, $additional_code, $generate_fc_accessors);
 my $module = $generator->generate();
 note $module;
 
@@ -69,6 +70,9 @@ my $bed_array = ['chr1', 1, 10, 'name', 0, '+'];
 my $bed6 = Tmp::Namespace::bed6->new_from_bed($bed_array);
 is($bed6->chrom(), 'chr1', 'Checking chrom accessor works as expected');
 is($bed6->chromStart(), 1, 'Checking chromStart accessor works as expected');
+is($bed6->fc_chromStart(), 2, 'Checking fc_chromStart returns back in 1-based coordinates');
+is($bed6->fc_chromEnd(), 10, 'Checking fc_chromEnd returns back in 1-based coordinates');
+is($bed6->size(), 9, 'Making sure length calculation works');
 is($bed6->chromEnd(), 10, 'Checking chromEnd accessor works as expected');
 is($bed6->name(), 'name', 'Checking name accessor works as expected');
 is($bed6->score(), 0, 'Checking score accessor works as expected');
@@ -83,5 +87,13 @@ is($bed6->tmp(), 'MOD', 'Checking injected code can be called');
 
 throws_ok { Tmp::Namespace::bed6->new_from_bed({}) } qr/Bed error.+array ref.+/, 'Building with a hash does not work';
 throws_ok { Tmp::Namespace::bed6->new_from_bed(['chr1', 1, 10]) } qr/Bed error.+right number of elements.+/, 'Building with an array with too few elements does not work';
+
+my $newbed = Tmp::Namespace::bed6->new();
+$newbed->fc_chromStart(2);
+$newbed->fc_chromEnd(10);
+is($newbed->chromStart(), 1, 'Checking chromStart set works');
+is($newbed->fc_chromStart(), 2, 'Checking fc_chromStart set works');
+is($newbed->chromEnd(), 10, 'Checking chromEnd set works');
+is($newbed->fc_chromEnd(), 10, 'Checking fc_chromEnd set works');
 
 done_testing();
