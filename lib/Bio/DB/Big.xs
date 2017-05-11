@@ -270,18 +270,18 @@ bf_header(big)
     SV * ref;
   CODE:
     h = (HV *)sv_2mortal((SV *)newHV());
-    hv_store(h, "version", 7, newSVuv(big->hdr->version), 0);
-    hv_store(h, "nLevels", 7, newSVuv(big->hdr->nLevels), 0);
+    hv_stores(h, "version", newSVuv(big->hdr->version));
+    hv_stores(h, "nLevels", newSVuv(big->hdr->nLevels));
     if(big->type == 0) {    
-      hv_store(h, "nBasesCovered", 13, newSVuv(big->hdr->nBasesCovered), 0);
-      hv_store(h, "minVal", 6, newSVnv(big->hdr->minVal), 0);
-      hv_store(h, "maxVal", 6, newSVnv(big->hdr->maxVal), 0);
-      hv_store(h, "sumData", 7, newSVnv(big->hdr->sumData), 0);
-      hv_store(h, "sumSquared", 10, newSVnv(big->hdr->sumSquared), 0);
+      hv_stores(h, "nBasesCovered", newSVuv(big->hdr->nBasesCovered));
+      hv_stores(h, "minVal", newSVnv(big->hdr->minVal));
+      hv_stores(h, "maxVal", newSVnv(big->hdr->maxVal));
+      hv_stores(h, "sumData", newSVnv(big->hdr->sumData));
+      hv_stores(h, "sumSquared", newSVnv(big->hdr->sumSquared));
     }
     else {
-      hv_store(h, "fieldCount", 10, newSVuv(big->hdr->fieldCount), 0);
-      hv_store(h, "definedFieldCount", 17, newSVuv(big->hdr->definedFieldCount), 0);
+      hv_stores(h, "fieldCount", newSVuv(big->hdr->fieldCount));
+      hv_stores(h, "definedFieldCount", newSVuv(big->hdr->definedFieldCount));
     } 
     
     ref = newRV((SV *)h);
@@ -302,8 +302,8 @@ bf_chroms(big)
     for(i=0; i<big->cl->nKeys; i++) {
       HV * element;
       element = (HV *)sv_2mortal((SV *)newHV());
-      hv_store(element, "name", 4, newSVpv(big->cl->chrom[i], strlen(big->cl->chrom[i])), 0);
-      hv_store(element, "length", 6, newSVuv(big->cl->len[i]), 0);
+      hv_stores(element, "name", newSVpv(big->cl->chrom[i], strlen(big->cl->chrom[i])));
+      hv_stores(element, "length", newSVuv(big->cl->len[i]));
       SV* element_ref;
       element_ref = newRV((SV *)element);
       hv_store(h, big->cl->chrom[i], strlen(big->cl->chrom[i]), element_ref, 0);
@@ -624,9 +624,9 @@ bf_get_intervals(big, chrom, startp=1, endp=0)
     for(i=0; i<(int) intervals->l; i++) {
       HV * element;
       element = (HV *)sv_2mortal((SV *)newHV());
-      hv_store(element, "start", 5, newSVuv(intervals->start[i]), 0);
-      hv_store(element, "end", 3, newSVuv(intervals->end[i]), 0);
-      hv_store(element, "value", 5, newSVnv(intervals->value[i]), 0);
+      hv_stores(element, "start", newSVuv(intervals->start[i]));
+      hv_stores(element, "end", newSVuv(intervals->end[i]));
+      hv_stores(element, "value", newSVnv(intervals->value[i]));
       SV* element_ref;
       element_ref = newRV((SV *)element);
       av_push(avref, element_ref);
@@ -717,10 +717,10 @@ bf_get_entries(big, chrom, startp=1, endp=0, withstring=0)
     for(i=0; i<(int) entries->l; i++) {
       HV * element;
       element = (HV *)sv_2mortal((SV *)newHV());
-      hv_store(element, "start", 5, newSVuv(entries->start[i]), 0);
-      hv_store(element, "end", 3, newSVuv(entries->end[i]), 0);
+      hv_stores(element, "start", newSVuv(entries->start[i]));
+      hv_stores(element, "end", newSVuv(entries->end[i]));
       if(withstring) {
-        hv_store(element, "string", 6, newSVpv(entries->str[i], strlen(entries->str[i])), 0);
+        hv_stores(element, "string", newSVpv(entries->str[i], strlen(entries->str[i])));
       }
       SV* element_ref;
       element_ref = newRV((SV *)element);
@@ -812,9 +812,9 @@ bfiter_next(iter)
         for(i=0; i<(int) iter->intervals->l; i++) {
           HV * element;
           element = (HV *)sv_2mortal((SV *)newHV());
-          hv_store(element, "start", 5, newSVuv(iter->intervals->start[i]), 0);
-          hv_store(element, "end", 3, newSVuv(iter->intervals->end[i]), 0);
-          hv_store(element, "value", 5, newSVnv(iter->intervals->value[i]), 0);
+          hv_stores(element, "start", newSVuv(iter->intervals->start[i]));
+          hv_stores(element, "end", newSVuv(iter->intervals->end[i]));
+          hv_stores(element, "value", newSVnv(iter->intervals->value[i]));
           SV* element_ref;
           element_ref = newRV((SV *)element);
           av_push(avref, element_ref);
@@ -824,10 +824,10 @@ bfiter_next(iter)
         for(i=0; i<(int) iter->entries->l; i++) {
           HV * element;
           element = (HV *)sv_2mortal((SV *)newHV());
-          hv_store(element, "start", 5, newSVuv(iter->entries->start[i]), 0);
-          hv_store(element, "end", 3, newSVuv(iter->entries->end[i]), 0);
+          hv_stores(element, "start", newSVuv(iter->entries->start[i]));
+          hv_stores(element, "end", newSVuv(iter->entries->end[i]));
           if(iter->entries->str[i]) {
-            hv_store(element, "string", 6, newSVpv(iter->entries->str[i], strlen(iter->entries->str[i])), 0);
+            hv_stores(element, "string", newSVpv(iter->entries->str[i], strlen(iter->entries->str[i])));
           }
           SV* element_ref;
           element_ref = newRV((SV *)element);
