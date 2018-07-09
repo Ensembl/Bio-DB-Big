@@ -6,7 +6,7 @@ perl:
 sudo: false
 
 before_install:
-    - git clone --branch 0.3.0 --depth=1 https://github.com/dpryan79/libBigWig.git
+    - git clone --branch 0.4.2 --depth=1 https://github.com/dpryan79/libBigWig.git
     - cd libBigWig
     - make prefix=$HOME/libBigWig install
     - cd ..
