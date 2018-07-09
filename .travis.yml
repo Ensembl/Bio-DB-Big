@@ -15,4 +15,4 @@ install:
     - cpanm --installdeps --with-all-features .
     - perl Build.PL --libbigwig=$HOME/libBigWig
 
-script: "./Build test"
+script: "./Build test --verbose"

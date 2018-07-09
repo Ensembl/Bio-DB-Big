@@ -26,6 +26,7 @@ Bio::DB::Big->init();
 
 note 'Query local bigwig';
 my $file = "${Bin}/data/test.bw";
+note "Working with file ${file}";
 
 my $bw = Bio::DB::Big->open($file);
 my $h = $bw->header();
