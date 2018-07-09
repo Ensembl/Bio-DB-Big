@@ -12,11 +12,11 @@ These methods are all called on the package name
 
 =head2 Bio::DB::Big::File->test_big_bed('/path/to/big.file')
 
-Returns a boolean response if the given path (local or remote) was a BigBed or not. 
+Returns a boolean response if the given path (local or remote) was a BigBed or not.
 
 =head2 Bio::DB::Big::File->test_big_wig('/path/to/big.file')
 
-Returns a boolean response if the given path (local or remote) was a BigWig or not. 
+Returns a boolean response if the given path (local or remote) was a BigWig or not.
 
 =head2 my $bw = Bio::DB::Big::File->open_big_wig('/path/to/big.bw')
 
@@ -105,7 +105,7 @@ The full parameter is used to force libBigWig to use the true underlying values 
 
 =head2 my $all_stats = $bf->get_all_stats($chromosome, $start, $end, $bins, $full);
 
-Calculate all available statistics and returns the elements back to you in a single array reference of Hashes. 
+Calculate all available statistics and returns the elements back to you in a single array reference of Hashes.
 
   my $stats = $bf->get_all_stats('chr1', 0, 100, 5, 0);
   foreach my $v (@{$stats}) {
@@ -174,7 +174,7 @@ An iterator version of the C<get_intervals()> code allowing you to walk through 
 
 =head2 my $entries_array = $bf->get_entries($chromosome, $start, $end, $use_string);
 
-Used to retrieve the intervals that overlap a range specified in 0-based, half-open coordinates. Chromosome, start and end are required paramters. The $use_string parameter controls if the call returns just the bounds of each bed record or returns the tab seperated Bed line along with the element. If you are using bed for most things apart from overlap calls then you want to set this to true. 
+Used to retrieve the intervals that overlap a range specified in 0-based, half-open coordinates. Chromosome, start and end are required paramters. The $use_string parameter controls if the call returns just the bounds of each bed record or returns the tab seperated Bed line along with the element. If you are using bed for most things apart from overlap calls then you want to set this to true.
 
 The returned array will contain a hash for each entry with the keys start (0 based), end (half-open) and string (a string). If strings were not requested then the string key will be absent from the hash.
 
@@ -226,22 +226,20 @@ The following strings can be used when calculating statistics over a BigWig file
 
 =cut
 
-=pod 
+=pod
 
 =head1 LICENSE
 
-Copyright [2015-2017] EMBL-European Bioinformatics Institute
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
 
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 
 =cut

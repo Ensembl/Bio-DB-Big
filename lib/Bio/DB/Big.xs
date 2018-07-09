@@ -57,7 +57,7 @@ void
 check_bounds(bigWigFile_t* big, char* chrom, uint32_t tid, uint32_t start, uint32_t end) {
   uint32_t chromlen;
   chromlen = big->cl->len[tid];
-  
+
   if(start >= end) {
     croak("Invalid bounds; start (%d) is equal to or greater than end (%d)", start, end);
   }
@@ -76,7 +76,7 @@ typedef struct {
 
 START_MY_CXT
 
-CURLcode 
+CURLcode
 bigfileCallBack(CURL *curl) {
   dMY_CXT;
   CURLcode rv;
@@ -88,13 +88,12 @@ bigfileCallBack(CURL *curl) {
   if(rv != CURLE_OK) return rv;
 
   rv = curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, MY_CXT.timeout);
-  
+
   return rv;
 }
 
 MODULE = Bio::DB::Big PACKAGE = Bio::DB::Big PREFIX=b_
 
-# Copyright [2015-2017] EMBL-European Bioinformatics Institute
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -272,7 +271,7 @@ bf_header(big)
     h = (HV *)sv_2mortal((SV *)newHV());
     hv_stores(h, "version", newSVuv(big->hdr->version));
     hv_stores(h, "nLevels", newSVuv(big->hdr->nLevels));
-    if(big->type == 0) {    
+    if(big->type == 0) {
       hv_stores(h, "nBasesCovered", newSVuv(big->hdr->nBasesCovered));
       hv_stores(h, "minVal", newSVnv(big->hdr->minVal));
       hv_stores(h, "maxVal", newSVnv(big->hdr->maxVal));
@@ -282,8 +281,8 @@ bf_header(big)
     else {
       hv_stores(h, "fieldCount", newSVuv(big->hdr->fieldCount));
       hv_stores(h, "definedFieldCount", newSVuv(big->hdr->definedFieldCount));
-    } 
-    
+    }
+
     ref = newRV((SV *)h);
     RETVAL = ref;
   OUTPUT:
@@ -354,8 +353,8 @@ bf_has_chrom(big, chrom)
 
 # BIGWIG WORK
 
-# When full == 0 this is the same as Bio::DB::BigFile::bigWigSummaryArray. 
-# When full == 1 not sure what its counterpart is. 
+# When full == 0 this is the same as Bio::DB::BigFile::bigWigSummaryArray.
+# When full == 1 not sure what its counterpart is.
 
 SV*
 bf_get_stats(big, chrom, startp=1, endp=0, binsp=1, type="mean", full=0)
@@ -380,24 +379,24 @@ bf_get_stats(big, chrom, startp=1, endp=0, binsp=1, type="mean", full=0)
     if(big->type == 1) {
       croak("Invalid operation; bigBed files do not have statistics");
     }
-    
+
     check_chrom(big, chrom);
     tid = bwGetTid(big, chrom);
     chromlen = big->cl->len[tid];
-    
+
     start = (uint32_t)startp;
     end = (uint32_t)endp;
     bins = (uint32_t)binsp;
-    
+
     if(end == 0) {
       end = chromlen;
     }
-    
+
     check_bounds(big, chrom, tid, start, end);
     if(char2bwstatsenum(type) == doesNotExist) {
       croak("Invalid type; %s does not map to a statistic enum", type);
     }
-    
+
     avref = (AV*) sv_2mortal((SV*)newAV());
     if(full) {
       values = bwStatsFromFull(big, chrom, start, end, bins, char2bwstatsenum(type));
@@ -419,10 +418,10 @@ bf_get_stats(big, chrom, startp=1, endp=0, binsp=1, type="mean", full=0)
     else {
       croak("Fetch error; encountered error whilst fetching statistics for '%s' between %d and %d over %d bins", chrom, start, end, bins);
     }
-    
+
     free(values);
     RETVAL = (SV*) newRV((SV*)avref);
-    
+
   OUTPUT:
     RETVAL
 
@@ -452,21 +451,21 @@ bf_get_all_stats(big, chrom, startp=1, endp=0, binsp=1, full=0)
     if(big->type == 1) {
       croak("Invalid operation; bigBed files do not have statistics");
     }
-    
+
     check_chrom(big, chrom);
     tid = bwGetTid(big, chrom);
     chromlen = big->cl->len[tid];
-    
+
     start = (uint32_t)startp;
     end = (uint32_t)endp;
     bins = (uint32_t)binsp;
-    
+
     if(end == 0) {
       end = chromlen;
     }
-    
+
     check_bounds(big, chrom, tid, start, end);
-    
+
     avref = (AV*) sv_2mortal((SV*)newAV());
     if(full) {
       mean_values = bwStatsFromFull(big, chrom, start, end, bins, char2bwstatsenum("mean"));
@@ -482,12 +481,12 @@ bf_get_all_stats(big, chrom, startp=1, endp=0, binsp=1, full=0)
       coverage_values = bwStats(big, chrom, start, end, bins, char2bwstatsenum("cov"));
       stddev_values = bwStats(big, chrom, start, end, bins, char2bwstatsenum("std"));
     }
-    
+
     if(mean_values || min_values || max_values || coverage_values || stddev_values) {
       for(i=0; i<bins; i++) {
         HV * element;
         element = (HV *)sv_2mortal((SV *)newHV());
-        
+
         if(mean_values && ! isnan(mean_values[i])) {
           hv_store(element, "mean", 4, newSVnv(mean_values[i]), 0);
         }
@@ -503,7 +502,7 @@ bf_get_all_stats(big, chrom, startp=1, endp=0, binsp=1, full=0)
         if(! isnan(stddev_values[i])) {
           hv_store(element, "dev", 3, newSVnv(stddev_values[i]), 0);
         }
-        
+
         SV* element_ref;
         element_ref = newRV((SV *)element);
         av_push(avref, element_ref);
@@ -512,7 +511,7 @@ bf_get_all_stats(big, chrom, startp=1, endp=0, binsp=1, full=0)
     else {
       croak("Fetch error; encountered error whilst fetching statistics for '%s' between %d and %d over %d bins", chrom, start, end, bins);
     }
-    
+
     if(mean_values)
       free(mean_values);
     if(min_values)
@@ -525,7 +524,7 @@ bf_get_all_stats(big, chrom, startp=1, endp=0, binsp=1, full=0)
       free(stddev_values);
 
     RETVAL = (SV*) newRV((SV*)avref);
-    
+
   OUTPUT:
     RETVAL
 
@@ -548,23 +547,23 @@ bf_get_values(big, chrom, startp=1, endp=0)
     if(big->type == 1) {
       croak("Invalid operation; bigBed files do not have values");
     }
-    
+
     check_chrom(big, chrom);
     tid = bwGetTid(big, chrom);
     chromlen = big->cl->len[tid];
-    
+
     start = (uint32_t)startp;
     end = (uint32_t)endp;
-    
+
     if(end == 0) {
       end = chromlen;
     }
-    
+
     check_bounds(big, chrom, tid, start, end);
-    
+
     avref = (AV*) sv_2mortal((SV*)newAV());
     values = bwGetValues(big, chrom, start, end, 1);
-    
+
     if(values) {
       for(i=0; i<(int) values->l; i++) {
         if(isnan(values->value[i])) {
@@ -604,23 +603,23 @@ bf_get_intervals(big, chrom, startp=1, endp=0)
     if(big->type == 1) {
       croak("Invalid operation; bigBed files do not have intervals");
     }
-    
+
     check_chrom(big, chrom);
     tid = bwGetTid(big, chrom);
     chromlen = big->cl->len[tid];
-    
+
     start = (uint32_t)startp;
     end = (uint32_t)endp;
-    
+
     if(end == 0) {
       end = chromlen;
     }
-    
+
     check_bounds(big, chrom, tid, start, end);
-    
+
     avref = (AV*) sv_2mortal((SV*)newAV());
     intervals = bwGetOverlappingIntervals(big, chrom, start, end);
-    
+
     for(i=0; i<(int) intervals->l; i++) {
       HV * element;
       element = (HV *)sv_2mortal((SV *)newHV());
@@ -656,21 +655,21 @@ bf_get_intervals_iterator(big, chrom, startp=1, endp=0, blocksperiterp=1)
     if(big->type == 1) {
       croak("Invalid operation; bigBed files do not have intervals");
     }
-    
+
     check_chrom(big, chrom);
     tid = bwGetTid(big, chrom);
     chromlen = big->cl->len[tid];
-    
+
     start = (uint32_t)startp;
     end = (uint32_t)endp;
     blocksperiter = (uint32_t)blocksperiterp;
-    
+
     if(end == 0) {
       end = chromlen;
     }
-    
+
     check_bounds(big, chrom, tid, start, end);
-    
+
     RETVAL = bwOverlappingIntervalsIterator(big, chrom, start, end, blocksperiter);
   OUTPUT:
     RETVAL
@@ -697,23 +696,23 @@ bf_get_entries(big, chrom, startp=1, endp=0, withstring=0)
     if(big->type == 0) {
       croak("Invalid operation; bigWig files do not have entries");
     }
-    
+
     check_chrom(big, chrom);
     tid = bwGetTid(big, chrom);
     chromlen = big->cl->len[tid];
-    
+
     start = (uint32_t)startp;
     end = (uint32_t)endp;
-    
+
     if(end == 0) {
       end = chromlen;
     }
-    
+
     check_bounds(big, chrom, tid, start, end);
-    
+
     avref = (AV*) sv_2mortal((SV*)newAV());
     entries = bbGetOverlappingEntries(big, chrom, start, end, withstring);
-    
+
     for(i=0; i<(int) entries->l; i++) {
       HV * element;
       element = (HV *)sv_2mortal((SV *)newHV());
@@ -752,21 +751,21 @@ bf_get_entries_iterator(big, chrom, startp=1, endp=0, withstring=0, blocksperite
     if(big->type == 0) {
       croak("Invalid operation; bigWig files do not have entries");
     }
-    
+
     check_chrom(big, chrom);
     tid = bwGetTid(big, chrom);
     chromlen = big->cl->len[tid];
-    
+
     start = (uint32_t)startp;
     end = (uint32_t)endp;
     blocksperiter = (uint32_t)blocksperiterp;
-    
+
     if(end == 0) {
       end = chromlen;
     }
-    
+
     check_bounds(big, chrom, tid, start, end);
-    
+
     RETVAL = bbOverlappingEntriesIterator(big, chrom, start, end, withstring, blocksperiter);
   OUTPUT:
     RETVAL

@@ -6,7 +6,7 @@ Bio::DB::Big - Interface to BigWig and BigBed files via libBigWig
 
     use Bio::DB::Big;
     use Bio::DB::Big::AutoSQL;
-    
+
     # Setup CURL buffers
     Bio::DB::Big->init();
 
@@ -21,11 +21,11 @@ Bio::DB::Big - Interface to BigWig and BigBed files via libBigWig
     printf("Working with %d zoom levels", $header->{nLevels});
     # Generic: Get chromosomes (comes back as a hash {chrom => length})
     my $chroms = $bw->chroms();
-    
+
     #Get stats, values and intervals
     if($bw->has_chrom('chr1')) {
       my $bins = 10;
-      
+
       # uses the zoom levels and returns an array of 10 bins over chromsome positions 1-100
       my $stats = $bw->get_stats('chr1', 0, 100, $bins, 'mean');
       foreach my $s (@{$stats}) {
@@ -43,7 +43,7 @@ Bio::DB::Big - Interface to BigWig and BigBed files via libBigWig
       foreach my $i (@{$intervals}) {
         printf("%d - %d: %f\n", $i->{start}, $i->{end}, $i->{value})
       }
-      
+
       # Or iterate which allows you to move through a file without loading everything into memory
       my $blocks_per_iter = 10;
       my $iter = $bw->get_intervals_iterator('chr1', 0, 100, $blocks_per_iter);
@@ -71,7 +71,7 @@ Bio::DB::Big - Interface to BigWig and BigBed files via libBigWig
           printf("%d - %d: %s\n", $e->{start}, $e->{end}, $e->{string});
         }
       }
-      
+
       # Finally you can request AutoSQL and parse if available
       if($bb->get_autosql()) {
         my $autosql = $bb->get_autosql();
@@ -148,19 +148,19 @@ Initalises libBigWig. Essential to call B<if> you are going to load remote files
 
 =head2 Bio::DB::Big->timeout(0);
 
-Sets the libcurl timeout in milliseconds. Setting this to 0 means there is no timeout. See libcurl's CURLOPT_TIMEOUT_MS value for more information. 
+Sets the libcurl timeout in milliseconds. Setting this to 0 means there is no timeout. See libcurl's CURLOPT_TIMEOUT_MS value for more information.
 
 This is a global variable for the entire library.
 
 =head2 Bio::DB::Big->follow_redirects(1);
 
-By default libcurl will not follow 301 or 302 error codes. Switching this on will force it to follow them. See libcurl's CURLOPT_FOLLOWLOCATION value for more information. 
+By default libcurl will not follow 301 or 302 error codes. Switching this on will force it to follow them. See libcurl's CURLOPT_FOLLOWLOCATION value for more information.
 
 This is a global variable for the entire library.
 
 =head2 Bio::DB::Big->verify_ssl(1);
 
-Forces libcurl to verify the remote SSL/TLS certificates. By default this is true. Setting it to false will allow any HTTPS communication to occur irrelevant of the attached certificate. See libcurl's CURLOPT_SSL_VERIFYPEER value for more information. 
+Forces libcurl to verify the remote SSL/TLS certificates. By default this is true. Setting it to false will allow any HTTPS communication to occur irrelevant of the attached certificate. See libcurl's CURLOPT_SSL_VERIFYPEER value for more information.
 
 This is a global variable for the entire library.
 
@@ -224,18 +224,16 @@ L<Bio::DB::BigFile>
 
 =head1 LICENSE
 
-Copyright [2015-2017] EMBL-European Bioinformatics Institute
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
 
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 
 =cut

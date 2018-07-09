@@ -1,18 +1,16 @@
 =head1 LICENSE
 
-Copyright [2015-2017] EMBL-European Bioinformatics Institute
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
 
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 
 =cut
 
@@ -49,7 +47,7 @@ use Bio::DB::Big::AutoSQLField;
 
 #### START OF REGEXS
 
-#### A set of regular expressions used to parse AutoSQL files. See 
+#### A set of regular expressions used to parse AutoSQL files. See
 #### https://github.com/ucscGenomeBrowser/kent/blob/master/src/hg/autoSql/autoSql.doc
 #### for more information on the specification.
 
@@ -259,7 +257,7 @@ sub has_field {
 
 =pod
 
-=head2 is_table() 
+=head2 is_table()
 
 Returns a boolean if this AutoSQL object represents a table i.e. the type is set to table
 
@@ -291,7 +289,7 @@ sub _parse {
 }
 
 
-# Runs the declare regex against the raw autosql. Pulls back the 
+# Runs the declare regex against the raw autosql. Pulls back the
 # header and all remaining unparsed fields i.e. anything between ().
 # Throws an exception if the AutoSQL isn't formatted as expected
 sub _parse_header {
@@ -306,7 +304,7 @@ sub _parse_header {
 }
 
 # Loop through the fields (each one carridge returned) using the field regular expression.
-# We currently parse 11 fields out some of which may be empty. Any changes to the  
+# We currently parse 11 fields out some of which may be empty. Any changes to the
 # capture fields used in the regular expressions will have an impact on the order of capture
 sub _parse_fields {
   my ($self, $raw_fields) = @_;
@@ -314,27 +312,27 @@ sub _parse_fields {
   while($raw_fields =~ /$FIELD_RX/g) {
 
     my (
-      $type, $field_size, $field_values, 
-      $declare_type, $declare_name, $declare_size, 
-      $name, 
-      $index_type, $index_size, $auto, 
+      $type, $field_size, $field_values,
+      $declare_type, $declare_name, $declare_size,
+      $name,
+      $index_type, $index_size, $auto,
       $comment) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);
 
     # If no type is specified we default to the declared type
     if(! $type) {
       $type = $declare_type;
     }
-    
+
     # Any set or enum needs splitting if present
     my @field_values_parsed;
     if($field_values) {
       @field_values_parsed = split /,\s*/, $field_values;
     }
-    
+
     # Field and string need to be stringified (because they can be text as well as numerics)
     $field_size = "$field_size" if $field_size;
     $index_size = "$index_size" if $index_size;
-    
+
     # Create the field, push and increment position
     my $field = Bio::DB::Big::AutoSQLField->new({
       type => $type,
