@@ -1,21 +1,18 @@
 =head1 LICENSE
 
-Copyright [2015-2017] EMBL-European Bioinformatics Institute
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
 
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 
 =cut
-
 use strict;
 use warnings;
 
@@ -29,6 +26,7 @@ Bio::DB::Big->init();
 
 note 'Query local bigwig';
 my $file = "${Bin}/data/test.bw";
+note "Working with file ${file}";
 
 my $bw = Bio::DB::Big->open($file);
 my $h = $bw->header();
@@ -44,7 +42,7 @@ is_num($h->{sumSquared}, 500.3, 0.1, 'Checking header: sumSquared');
 my $chroms = $bw->chroms;
 my $chr1_len = 195471971;
 my $chr10_len = 130694993;
-is_deeply([sort keys %{$chroms}], [qw/1 10/], 'Checking we have two chromosomes in the test bigwig file'); 
+is_deeply([sort keys %{$chroms}], [qw/1 10/], 'Checking we have two chromosomes in the test bigwig file');
 is($chroms->{1}->{length}, $chr1_len, 'Length of chrom 1 is as expected');
 is($chroms->{1}->{name}, "1", 'Name of chrom 1 is as expected');
 is($chroms->{10}->{length}, $chr10_len, 'Length of chrom 10 is as expected');

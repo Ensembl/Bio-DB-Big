@@ -1,21 +1,18 @@
 =head1 LICENSE
 
-Copyright [2015-2017] EMBL-European Bioinformatics Institute
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
 
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 
 =cut
-
 package Bio::DB::Big::PerlModuleGenerator;
 
 =pod
@@ -38,7 +35,7 @@ for each field available, a C<new()> method and a C<new_from_bed()> method that 
 to construct an object from an array of bed elements. C<new_from_bed()> will error if an array is not
 given or the given array does not have the correct number of elements.
 
-The generated code also comes with two methods for creating new data structures. C<to_array>, which 
+The generated code also comes with two methods for creating new data structures. C<to_array>, which
 creates an array ordered as a BED line would be. The second is C<to_hash>, which is a hash copy of the object.
 
 =head1 METHODS
@@ -103,7 +100,7 @@ sub autosql {
 
 =head2 additional_code()
 
-Accessor for the additional_code given to this object. This is custom additional code to be injected 
+Accessor for the additional_code given to this object. This is custom additional code to be injected
 into the class
 
 =cut
@@ -118,7 +115,7 @@ sub additional_code {
 
 =head2 generate_fully_closed_accessors()
 
-If set to true we will generate two accessors called C<fc_chromStart> and C<fc_chromEnd>, which handle 
+If set to true we will generate two accessors called C<fc_chromStart> and C<fc_chromEnd>, which handle
 converting between 0-start and 1-start coordinate systems. We assume all BED files have these
 fields filled in.
 
@@ -130,7 +127,7 @@ sub generate_fully_closed_accessors {
   return $self->{generate_fully_closed_accessors};
 }
 
-=pod 
+=pod
 
 =head2 warning_line
 
@@ -178,12 +175,12 @@ sub _generate_tt {
   my ($self) = @_;
   my $template = $self->_template();
   my $autosql = $self->autosql();
-  
+
   my $fields = [
-    map { { name => $_->name(), index => ($_->position()-1) } } 
+    map { { name => $_->name(), index => ($_->position()-1) } }
     @{$autosql->fields()}
   ];
-  
+
   my $params = {
     name => $autosql->name(),
     fields => $fields,
