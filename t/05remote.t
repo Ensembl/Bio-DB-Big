@@ -18,8 +18,12 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fake::HTTPD;
 use Test::Output;
+BEGIN {
+	if (not eval {require Test::Fake::HTTPD; 1;}) {
+		plan skip_all => 'Optional module Test::Fake::HTTPD not available';
+	}
+}
 use Test::Exception;
 use Bio::DB::Big;
 
