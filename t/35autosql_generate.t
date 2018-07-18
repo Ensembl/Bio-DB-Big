@@ -37,8 +37,7 @@ my $raw_autosql = qq{table bed6
     )};
 my $additional_code = 'sub tmp { return "MOD";}';
 my $generate_fc_accessors = 1;
-my $autosql = Bio::DB::Big::AutoSQL->new($raw_autosql);
-my $generator = Bio::DB::Big::PerlModuleGenerator->new('Tmp::Namespace', $autosql, $additional_code, $generate_fc_accessors);
+my $generator = Bio::DB::Big::PerlModuleGenerator->new('Tmp::Namespace', $raw_autosql, $additional_code, $generate_fc_accessors);
 my $module = $generator->generate();
 note $module;
 

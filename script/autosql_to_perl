@@ -1,0 +1,79 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use Pod::Usage;
+
+use Bio::DB::Big::GeneratorExe;
+
+my $opts = {};
+GetOptions($opts,
+  'namespace=s',
+  'autosql=s',
+  'target=s',
+  'fully-closed',
+  'help|?',
+  'man') or pod2usage(2);
+pod2usage(1) if $opts->{help};
+pod2usage(-exitval => 0, -verbose => 2) if $opts->{man};
+
+eval {
+  my $exe = Bio::DB::Big::GeneratorExe->new($opts->{namespace}, $opts->{autosql}, $opts->{target}, $opts->{'fully-closed'});
+  $exe->run();
+};
+if($@) {
+  warn "Error detected: $@";
+  pod2usage(-exitval => 1, -verbose => 1);
+}
+
+__END__
+ =head1 NAME
+
+autosql_to_perl - Generate a Perl module from an AutoSQL definition
+
+=head1 SYNOPSIS
+
+sample [options] [file ...]
+
+  Options:
+    -namespace [Tmp]   root package for the module
+    -autosql [f.as]    AutoSQL file to generate the module from
+    -target [bed4.pm]  Location to write said generated module to
+    -help              brief help message
+    -man               full documentation
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-namespace>
+
+Required parameter. Specify the namespace this module will be created under e.g.
+C<-namespace Tmp::Module>. The generated class will be based on the given AutoSQL name
+
+=item B<-autosql>
+
+Required parameter. Path to the AutoSQL file. Can be a filesystem path or a URL
+
+=item B<-target>
+
+Required parameter. Location to write the module out to. Must be a file location
+
+=item B<-help>
+
+Print a brief help message and exits.
+
+=item B<-man>
+
+Prints the manual page and exits.
+
+=back
+
+=head1 DESCRIPTION
+
+B<autosql_to_perl> will read and parse a given AutoSQL file and generate a corresponding Perl module. That
+module can be used to parse BED lines from a BED source or emit BED lines.
+
+=cut

@@ -23,8 +23,7 @@ Bio::DB::Big::PerlModuleGenerator
 
 =head1 SYNOPSIS
 
-  my $autosql = Bio::DB::Big::AutoSQL->new($autosql_string);
-  my $generator = Bio::DB::Big::PerlModuleGenerator->new('My::Root::Namespace', $autosql);
+  my $generator = Bio::DB::Big::PerlModuleGenerator->new('My::Root::Namespace', $autosql_string);
   my $module = $geneator->generate();
   $geneator->generate_to_file('/path/to/file.pm');
 
@@ -46,22 +45,27 @@ use strict;
 use warnings;
 use POSIX qw/strftime/;
 use Template::Tiny;
+use Carp qw/confess/;
+use Bio::DB::Big::AutoSQL;
 
 my $WARNING_LINE = '########### CUSTOM CODE BELOW: Only insert custom code below this line #############';
 
 =pod
 
-=head new($namespace, $autosql, $additional_code)
+=head new($namespace, $raw_autosql, $additional_code, generate_fully_closed_accessors)
 
-Construct an object with a namespace and an autosql object. You can also give the module additional code to import in
+Construct an object with a namespace and an autosql object. You can also give the module additional code to import
+into the module and an option to generate fully closed (Ensembl style) coordinate accessors
 
 =cut
 
 sub new {
-  my ($class, $namespace, $autosql, $additional_code, $generate_fully_closed_accessors) = @_;
+  my ($class, $namespace, $raw_autosql, $additional_code, $generate_fully_closed_accessors) = @_;
+  confess "No namespace given" unless defined $namespace;
+  confess "No raw AutoSQL given" unless defined $raw_autosql;
   my $self = bless({
     namespace => $namespace,
-    autosql => $autosql,
+    raw_autosql => $raw_autosql,
     additional_code => $additional_code,
     generate_fully_closed_accessors => $generate_fully_closed_accessors
   }, (ref($class)||$class));
@@ -84,15 +88,30 @@ sub namespace {
 
 =pod
 
+=head2 raw_autosql()
+
+Accessor for the raw_autosql given to this object
+
+=cut
+
+sub raw_autosql {
+  my ($self, $raw_autosql) = @_;
+  $self->{raw_autosql} = $raw_autosql if defined $raw_autosql;
+  return $self->{raw_autosql};
+}
+
 =head2 autosql()
 
-Accessor for the autosql given to this object
+Accessor for the autosql given to this object or lazy loaded from the raw_autosql
 
 =cut
 
 sub autosql {
   my ($self, $autosql) = @_;
   $self->{autosql} = $autosql if defined $autosql;
+  if(! defined $self->{autosql}) {
+    $self->{autosql} = Bio::DB::Big::AutoSQL->new($self->{raw_autosql});
+  }
   return $self->{autosql};
 }
 
@@ -177,12 +196,13 @@ sub _generate_tt {
   my $autosql = $self->autosql();
 
   my $fields = [
-    map { { name => $_->name(), index => ($_->position()-1) } }
+    map { { name => $_->name(), index => ($_->position()-1), comment => $_->comment(), type => $_->type() } }
     @{$autosql->fields()}
   ];
 
   my $params = {
     name => $autosql->name(),
+    raw_autosql => $self->raw_autosql(),
     fields => $fields,
     field_count => scalar(@{$fields}),
     time => strftime('%FT%T%z', localtime),
@@ -211,11 +231,32 @@ use warnings;
 use Carp qw/confess/;
 use Scalar::Util qw/reftype/;
 
+=pod
+
+=head2 new
+
+    my $obj = [%namespace %]::[%name %]->new();
+
+Create an empty blessed instance of this class. Useful to use when generating BED lines.
+
+=cut
+
 sub new {
   my ($package) = @_;
   my $class = ref($package) || $package;
   return bless({}, $class);
 }
+
+=pod
+
+=head2 new_from_bed
+
+    my $obj = [%namespace %]::[%name %]->new_from_bed([ ... ]);
+
+Create an instance of this package by giving the constructor an array representing a single bed line. The code
+will error if the item given is not an array or does not match the expected number of fields.
+
+=cut
 
 sub new_from_bed {
   my ($package, $bed_line) = @_;
@@ -263,7 +304,7 @@ sub to_hash {
 
 =head2 [% f.name %]
 
-Accessor for the attribute [% f.name %]
+Accessor for the attribute [% f.name %] ([% f.type %]). [% f.comment %]
 
 =cut
 
@@ -329,6 +370,9 @@ sub fc_chromEnd {
 [% END -%]
 
 1;
+__END__
+# AutoSQL used to generate this class
+[% raw_autosql %]
 TMPL
 }
 
