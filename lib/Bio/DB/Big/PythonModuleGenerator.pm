@@ -105,15 +105,18 @@ class [% name %](object):
         """Return the size of the feature"""
         return self.chromEnd - self.chromStart
 
-    def number_of_fields(self):
+    @staticmethod
+    def number_of_fields():
         """Return the number of fields in the given object"""
-        return [% fields_count %]
+        return [% field_count %]
 
-    def autosql_name(self):
+    @staticmethod
+    def autosql_name():
         """Return the original name used for this AutoSQL definition"""
         return '[% name %]'
 
-    def autosql(self):
+    @staticmethod
+    def autosql():
         """Return the original raw AutoSQL definition (useful if generating BigBed files)"""
         return """[% raw_autosql %]"""
 
