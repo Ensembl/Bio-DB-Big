@@ -26,17 +26,14 @@ Bio::DB::Big::PythonModuleGenerator
 
   my $generator = Bio::DB::Big::PythonModuleGenerator->new('My::Root::Namespace', $autosql_string);
   my $module = $geneator->generate();
-  $geneator->generate_to_file('/path/to/file.pm');
+  $geneator->generate_to_file('/path/to/file.py');
 
 =head1 DESCRIPTION
 
-Generate a Perl module from an AutoSQL definition. The generated module is very basic with accessors
-for each field available, a C<new()> method and a C<new_from_bed()> method that can be used
-to construct an object from an array of bed elements. C<new_from_bed()> will error if an array is not
-given or the given array does not have the correct number of elements.
+Generate a Python module from an AutoSQL definition. The generated module is very basic with accessors
+for each field, an C<init()> method with named attributes listed in bed order.
 
-The generated code also comes with two methods for creating new data structures. C<to_array>, which
-creates an array ordered as a BED line would be. The second is C<to_hash>, which is a hash copy of the object.
+The generated code also comes with a method for creating a list of attributes in bed order called C<tolist>.
 
 =head1 METHODS
 
@@ -95,7 +92,7 @@ class [% name %](object):
     self.[% f.name %] = [% f.name %]
     [% END -%]
 
-    def to_list(self):
+    def tolist(self):
         """Generate a list of the fields in the expected BED output order"""
         bed_fields = list()
         [% FOREACH f IN fields %]bed_fields.append(self.[% f.name %])
