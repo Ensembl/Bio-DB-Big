@@ -43,179 +43,23 @@ creates an array ordered as a BED line would be. The second is C<to_hash>, which
 
 use strict;
 use warnings;
+use base qw/Bio::DB::Big::BaseModuleGenerator/;
+
 use POSIX qw/strftime/;
 use Template::Tiny;
 use Carp qw/confess/;
 use Bio::DB::Big::AutoSQL;
 
+
 my $WARNING_LINE = '########### CUSTOM CODE BELOW: Only insert custom code below this line #############';
 
-=pod
-
-=head new($namespace, $raw_autosql, $additional_code, generate_fully_closed_accessors)
-
-Construct an object with a namespace and an autosql object. You can also give the module additional code to import
-into the module and an option to generate fully closed (Ensembl style) coordinate accessors
-
-=cut
-
-sub new {
-  my ($class, $namespace, $raw_autosql, $additional_code, $generate_fully_closed_accessors) = @_;
-  confess "No namespace given" unless defined $namespace;
-  confess "No raw AutoSQL given" unless defined $raw_autosql;
-  my $self = bless({
-    namespace => $namespace,
-    raw_autosql => $raw_autosql,
-    additional_code => $additional_code,
-    generate_fully_closed_accessors => $generate_fully_closed_accessors
-  }, (ref($class)||$class));
-  return $self;
+sub extension {
+  return 'pm';
 }
-
-=pod
-
-=head2 namespace()
-
-Accessor for the namespace given to this object
-
-=cut
-
-sub namespace {
-  my ($self, $namespace) = @_;
-  $self->{namespace} = $namespace if defined $namespace;
-  return $self->{namespace};
-}
-
-=pod
-
-=head2 raw_autosql()
-
-Accessor for the raw_autosql given to this object
-
-=cut
-
-sub raw_autosql {
-  my ($self, $raw_autosql) = @_;
-  $self->{raw_autosql} = $raw_autosql if defined $raw_autosql;
-  return $self->{raw_autosql};
-}
-
-=head2 autosql()
-
-Accessor for the autosql given to this object or lazy loaded from the raw_autosql
-
-=cut
-
-sub autosql {
-  my ($self, $autosql) = @_;
-  $self->{autosql} = $autosql if defined $autosql;
-  if(! defined $self->{autosql}) {
-    $self->{autosql} = Bio::DB::Big::AutoSQL->new($self->{raw_autosql});
-  }
-  return $self->{autosql};
-}
-
-=pod
-
-=head2 additional_code()
-
-Accessor for the additional_code given to this object. This is custom additional code to be injected
-into the class
-
-=cut
-
-sub additional_code {
-  my ($self, $additional_code) = @_;
-  $self->{additional_code} = $additional_code if defined $additional_code;
-  return $self->{additional_code};
-}
-
-=pod
-
-=head2 generate_fully_closed_accessors()
-
-If set to true we will generate two accessors called C<fc_chromStart> and C<fc_chromEnd>, which handle
-converting between 0-start and 1-start coordinate systems. We assume all BED files have these
-fields filled in.
-
-=cut
-
-sub generate_fully_closed_accessors {
-  my ($self, $generate_fully_closed_accessors) = @_;
-  $self->{generate_fully_closed_accessors} = $generate_fully_closed_accessors if defined $generate_fully_closed_accessors;
-  return $self->{generate_fully_closed_accessors};
-}
-
-=pod
-
-=head2 warning_line
-
-Emit the warning line used to denote custom code in a generated module
-
-=cut
 
 sub warning_line {
-  my ($self) = @_;
-  return $WARNING_LINE;
-}
-
-=pod
-
-=head2 generate()
-
-Creates the module and returns it as a scalar
-
-=cut
-
-sub generate {
-  my ($self) = @_;
-  return $self->_generate_tt();
-}
-
-=pod
-
-=head2 generate_to_file($file)
-
-Generates the module and writes it to the specified location
-
-=cut
-
-sub generate_to_file {
-  my ($self, $file) = @_;
-  my $module = $self->generate();
-  open my $fh, '>', $file or die "Cannot open '$file' for writing: $!";
-  print $fh $module;
-  close $fh or die "Cannot close '$file': $!";
-  return 1;
-}
-
-# Grabs the params, formats, grabs the template, runs template tiny and returns the output
-sub _generate_tt {
-  my ($self) = @_;
-  my $template = $self->_template();
-  my $autosql = $self->autosql();
-
-  my $fields = [
-    map { { name => $_->name(), index => ($_->position()-1), comment => $_->comment(), type => $_->type() } }
-    @{$autosql->fields()}
-  ];
-
-  my $params = {
-    name => $autosql->name(),
-    raw_autosql => $self->raw_autosql(),
-    fields => $fields,
-    field_count => scalar(@{$fields}),
-    time => strftime('%FT%T%z', localtime),
-    namespace => $self->namespace(),
-    warning_line => $self->warning_line(),
-    additional_code => $self->additional_code(),
-    generate_fully_closed_accessors => $self->generate_fully_closed_accessors(),
-  };
-
-  my $output = q{};
-  my $tt = Template::Tiny->new(TRIM => 0);
-  $tt->process(\$template, $params, \$output);
-  return $output;
+	my ($self) = @_;
+	return $WARNING_LINE;
 }
 
 # Return the template. Originally did this by reading <DATA> and having it as a __DATA__ block. That didn't work on rereads
@@ -251,7 +95,7 @@ sub new {
 
 =head2 new_from_bed
 
-    my $obj = [%namespace %]::[%name %]->new_from_bed([ ... ]);
+    my $obj = [% namespace %]::[% name %]->new_from_bed([ ... ]);
 
 Create an instance of this package by giving the constructor an array representing a single bed line. The code
 will error if the item given is not an array or does not match the expected number of fields.
@@ -297,6 +141,39 @@ Returns a hash copy of the fields
 sub to_hash {
   my ($self) = @_;
   return { %{ $self }};
+}
+
+=head2 autosql
+
+Returns the original AutoSQL definition used to generate this class
+
+=cut
+
+sub autosql {
+  my ($self) = @_;
+  return qq{[% autosql %]};
+}
+
+=head2 autosql_name
+
+Returns the original AutoSQL name (should be the same as the class)
+
+=cut
+
+sub autosql_name {
+  my ($self) = @_;
+  return '[% name %]';
+}
+
+=head2 number_of_fields
+
+Returns the total number of fields in this AutoSQL file
+
+=cut
+
+sub number_of_fields {
+  my ($self) = @_;
+  return [% fields_count %];
 }
 
 [%- FOREACH f IN fields -%]
@@ -370,9 +247,6 @@ sub fc_chromEnd {
 [% END -%]
 
 1;
-__END__
-# AutoSQL used to generate this class
-[% raw_autosql %]
 TMPL
 }
 

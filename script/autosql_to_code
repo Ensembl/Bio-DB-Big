@@ -1,0 +1,101 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use Pod::Usage;
+
+use Bio::DB::Big::GeneratorExe;
+
+my $opts = {
+  language => 'perl',
+};
+GetOptions($opts,
+  'namespace=s',
+  'autosql=s',
+  'target=s',
+  'fully-closed',
+  'language=s',
+  'help|?',
+  'man') or pod2usage(2);
+pod2usage(1) if $opts->{help};
+pod2usage(-exitval => 0, -verbose => 2) if $opts->{man};
+
+eval {
+  my $generators = Bio::DB::Big::GeneratorExe->builder($opts->{namespace}, $opts->{autosql}, $opts->{target}, $opts->{'fully-closed'}, $opts->{'language'});
+  foreach my $exe (@{$generators}) {
+    printf("Running AutoSQL generator for %s to %s (language = %s)\n", $exe->autosql_location(), $exe->target_file(), $opts->{language});
+    $exe->run();
+  }
+};
+if($@) {
+  warn "Error detected: $@";
+  pod2usage(-exitval => 1, -verbose => 1);
+}
+
+__END__
+ =head1 NAME
+
+autosql_to_code - Generate code from an AutoSQL definition
+
+=head1 SYNOPSIS
+
+sample [options] [file ...]
+
+  Options:
+    -namespace [Tmp]   Root package for the module
+    -autosql [f.as]    AutoSQL file to generate the module from. Can be a directory
+    -target [bed4.pm]  Location to write said generated module to. Can be a directory
+    -language [perl]   Specify the language to write out in (defaults to perl)
+    -fully-closed      Generate start/end accessors which use fully-closed semantics (1-based indexing)
+    -help              Brief help message
+    -man               Full documentation
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-namespace>
+
+Required parameter. Specify the namespace this module will be created under e.g.
+C<-namespace Tmp::Module>. The generated class will be based on the given AutoSQL name
+
+=item B<-autosql>
+
+Required parameter. Path to the AutoSQL file. Can be a file location, directory or a URL. If it is a directory
+the program will scan for all files ending in B<.as>.
+
+=item B<-target>
+
+Required parameter. Location to write the module out to. Must be a file location or a directory (if B<-autosql> was
+also a directory). If a directory is used then all generated files will have the same name as the source
+AutoSQL file with B<.as> substituted for B<.pm> (if outputting in Perl or using whatever is the accepted
+language extension).
+
+=item B<-language>
+
+Generate modules for the given language. Currently the code supports generating B<perl (.pm)> and
+B<python (.py)> (alpha support).
+
+=item B<-fully-closed>
+
+Generate two additional accessors called C<fc_chromStart()> and C<fc_chromEnd()>. These allow you to access and
+use the object in 1-base semantics rather than 0 based indexing.
+
+=item B<-help>
+
+Print a brief help message and exits.
+
+=item B<-man>
+
+Prints the manual page and exits.
+
+=back
+
+=head1 DESCRIPTION
+
+B<autosql_to_code> will read and parse a given AutoSQL file and generate a corresponding Perl module. That
+module can be used to parse BED lines from a BED source or emit BED lines.
+
+=cut

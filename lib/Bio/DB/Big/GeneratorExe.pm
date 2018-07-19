@@ -17,23 +17,67 @@
 package Bio::DB::Big::GeneratorExe;
 use strict;
 use warnings;
+
 use Carp qw/confess/;
-use Bio::DB::Big::PerlModuleGenerator;
 use HTTP::Tiny;
 use English qw/-no_match_vars/;
+use File::Spec;
+
+use Bio::DB::Big::PerlModuleGenerator;
+use Bio::DB::Big::PythonModuleGenerator;
+
+my $language_to_generator = {
+  perl => 'Bio::DB::Big::PerlModuleGenerator',
+  python => 'Bio::DB::Big::PythonModuleGenerator',
+};
+
+sub language_to_generator {
+  my ($class, $language) = @_;
+  if(exists $language_to_generator->{$language}) {
+    return $language_to_generator->{$language};
+  }
+  confess "Cannot decode $language to a suitable module generator";
+}
+
+# Use this to generate multiple files of AutoSQL perl module goodness!
+sub builder {
+  my ($class, $namespace, $autosql, $target, $generate_fully_closed_accessors, $language) = @_;
+  my @generators;
+  if(-d $autosql) {
+    confess "Both -autosql ($autosql) and -target ($target) must be directories if one is a directory" if ! -d $target;
+    opendir(my $dh, $autosql) or confess "Cannot open $autosql directory for reading: $!";
+    my $ext = $class->language_to_generator($language)->extension();
+    while (my $file = readdir($dh)) {
+      next if ($file =~ m/^\./);
+      next if ($file =~ m/^\.\./);
+      next if ($file !~ m/\.as$/);
+      my $autosql_location = File::Spec->catfile($autosql, $file);
+      my $module_name = $file;
+      $module_name =~ s/\.as$/.$ext/;
+      my $target_file = File::Spec->catfile($target, $module_name);
+      push(@generators, $class->new($namespace, $autosql_location, $target_file, $generate_fully_closed_accessors, $language));
+    }
+  }
+  else {
+    push(@generators, $class->new($namespace, $autosql, $target, $generate_fully_closed_accessors, $language));
+  }
+  return \@generators;
+}
 
 sub new {
-  my ($class, $namespace, $autosql_location, $target_file, $generate_fully_closed_accessors) = @_;
+  my ($class, $namespace, $autosql_location, $target_file, $generate_fully_closed_accessors, $language) = @_;
   confess "No namespace given" unless defined $namespace;
   confess "No AutoSQL location given" unless defined $autosql_location;
   confess "AutoSQL file not found at location ${autosql_location}" if ($autosql_location !~ /\w+:\/\// && ! -f $autosql_location);
   confess "No target file location given" unless defined $target_file;
+  confess "No language known about $language" unless exists $language_to_generator->{$language};
 
   my $self = bless({
     namespace => $namespace,
     autosql_location => $autosql_location,
     target_file => $target_file,
     generate_fully_closed_accessors => $generate_fully_closed_accessors,
+    language => $language
   }, (ref($class)||$class));
   return $self;
 }
@@ -76,6 +120,18 @@ sub target_file {
   return $self->{target_file};
 }
 
+=head2 language()
+
+Accessor for the language generator
+
+=cut
+
+sub language {
+  my ($self, $language) = @_;
+  $self->{language} = $language if defined $language;
+  return $self->{language};
+}
+
 =head2 generate_fully_closed_accessors()
 
 If set to true we will generate two accessors called C<fc_chromStart> and C<fc_chromEnd>, which handle
@@ -100,7 +156,7 @@ sub run {
   my ($self) = @_;
   my $raw_autosql = $self->_slurp($self->autosql_location);
   my $additional_code = $self->get_additional_code_block();
-  my $generator = Bio::DB::Big::PerlModuleGenerator->new($self->namespace(), $raw_autosql, $additional_code, $self->generate_fully_closed_accessors());
+  my $generator = $self->language_to_generator($self->language())->new($self->namespace(), $raw_autosql, $additional_code, $self->generate_fully_closed_accessors());
   $generator->generate_to_file($self->target_file());
   return;
 }
