@@ -19,7 +19,7 @@ Bio::DB::Big - Interface to BigWig and BigBed files via libBigWig
     # Generic: Get headers
     my $header = $bw->header();
     printf("Working with %d zoom levels", $header->{nLevels});
-    # Generic: Get chromosomes (comes back as a hash {chrom => length})
+    # Generic: Get chromosomes (comes back as a hash {chrom => {name => ... length => ...})
     my $chroms = $bw->chroms();
 
     #Get stats, values and intervals
